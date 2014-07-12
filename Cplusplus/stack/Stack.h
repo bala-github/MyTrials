@@ -1,6 +1,7 @@
 #ifndef _STACK_H
 #define _STATCK_H
 #include "Node.h"
+#include "StackException.h"
 namespace org
 {
 	namespace bala
@@ -13,7 +14,8 @@ namespace org
       public:
       	Stack();
         void push(T item);
-        T pop();
+        T pop() throw (StackException);
+        T getCurrentValue() throw (StackException);
         ~Stack();      
    	};
 
@@ -39,14 +41,27 @@ namespace org
       }
     }
 
-   template<class T> T Stack<T> :: pop()
+   template<class T> T Stack<T> :: pop() throw (StackException)
     {
-       T data = ptr->data;
-       struct node<T>* item = ptr->next;
-       delete ptr;
-       ptr = item;
-       return data;
+			if(NULL == ptr)
+			{
+				throw StackException(EMPTY_STACK);
+			}
+      T data = ptr->data;
+      struct node<T>* item = ptr->next;
+      delete ptr;
+      ptr = item;
+      return data;
     }
+
+    template<class T> T Stack<T> :: getCurrentValue() throw (StackException)
+    {
+			if(NULL == ptr)
+			{
+				throw StackException(EMPTY_STACK);
+			}
+      return ptr->data;   
+    } 
 
     template<class T> Stack<T> :: ~Stack()
     {

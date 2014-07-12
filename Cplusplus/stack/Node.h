@@ -10,8 +10,6 @@ namespace org
   		T data;
 	    struct node<T>* next;  		 	   	      
   	};
-    
-    
 	} 
 }
 #endif

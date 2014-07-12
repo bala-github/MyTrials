@@ -15,5 +15,11 @@ int main(int argc, char** argv)
 
   stack1.push(6);
 
-  cout << stack1.pop();
+  cout << "Current Value:" << stack1.getCurrentValue() << endl;
+
+  cout << "Popping items:" << endl;
+
+  cout << stack1.pop() << endl;
+
+  cout << stack1.pop() << endl;
 }
