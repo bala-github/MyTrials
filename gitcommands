@@ -3,3 +3,5 @@ git status -s
 git commit -m "libcurl example program"
 git push origin master
 
+git clone https://github.com/bala-github/MyTrials.git
+git remote set-url origin https://bala-github@github.com/bala-github/MyTrials.git
