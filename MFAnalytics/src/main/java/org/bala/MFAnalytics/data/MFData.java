@@ -1,6 +1,6 @@
 package org.bala.MFAnalytics.data;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 public class MFData {
 
@@ -12,7 +12,7 @@ public class MFData {
 	private double nav;
 	private double rp;
 	private double sp;
-	private Date date;
+	private LocalDate date;
 
 	public long getCode() {
 		return code;
@@ -78,14 +78,17 @@ public class MFData {
 		this.sp = sp;
 	}
 
-	public Date getDate() {
+	public LocalDate getDate() {
 		return date;
 	}
 
-	public void setDate(Date date) {
+	public void setDate(LocalDate date) {
 		this.date = date;
 	}
 	
-	
+	public String toString() {
+		
+		return amc + code + isinDivPayoutOrGrowth + isinDivReinvestment + name + nav + rp + sp + date.toString();
+	}
 	
 }

@@ -6,7 +6,14 @@ public class MFAnalyticsException extends Exception {
 
 	public MFAnalyticsException(MFAnalyticsErrorCode errorCode) {
 		
-		super(errorCode.getMessage());
+		super(errorCode.getErrorCode());
 		
 	}
+	
+	public MFAnalyticsException(MFAnalyticsErrorCode errorCode, Throwable e) {
+		
+		super(errorCode.getErrorCode(), e);		
+	}	
+	
+	
 }

@@ -13,11 +13,25 @@ import org.junit.Test;
 public class TextFormatMFDataReaderTest {
 
 	@Test(expected = MFAnalyticsException.class)
-	public void test() throws IOException, MFAnalyticsException {
+	public void testInvalidData() throws IOException, MFAnalyticsException {
 		
 		InputStream in = this.getClass().getResourceAsStream("/InvalidTextFormat.txt");
 
 		MFDataReader datareader = new TextFormatMFDataReader(in);
+		
+	}
+	
+	@Test
+	public void testValidData() throws  MFAnalyticsException, IOException {
+		
+		InputStream in = this.getClass().getResourceAsStream("/ValidTextFormat.txt");
+		
+		MFDataReader datareader = new TextFormatMFDataReader(in);
+		
+		while(datareader.hasMFData()) {
+			
+			System.out.println(datareader.getMFData().toString());
+		}
 		
 	}
 

@@ -1,0 +1,31 @@
+Scheme Code;ISIN Div Payout/ ISIN Growth;ISIN Div Reinvestment;Scheme Name;Net Asset Value;Repurchase Price;Sale Price;Date
+ 
+Open Ended Schemes(Balanced)
+ 
+Axis Mutual Fund
+ 
+120523;INF846K01ET8;INF846K01EU6;Axis Triple Advantage Fund - Direct Plan - Dividend Option;13.2886;12.8899;13.2886;24-Apr-2015
+120524;INF846K01EV4;-;Axis Triple Advantage Fund - Direct Plan - Growth Option;15.4279;14.9651;15.4279;24-Apr-2015
+113065;INF846K01776;INF846K01784;Axis Triple Advantage Fund - Dividend Option;12.2786;11.9102;12.2786;24-Apr-2015
+113064;INF846K01768;-;Axis Triple Advantage Fund - Growth Option;15.0545;14.6029;15.0545;24-Apr-2015
+ 
+Baroda Pioneer Mutual Fund
+ 
+125112;INF955L01DB5;-;Baroda Pioneer Balance Fund - Plan A - Bonus Option;42.54;42.11;42.54;24-Apr-2015
+101913;INF955L01682;INF955L01690;BARODA PIONEER BALANCE FUND - Plan A - Dividend Option;25.29;25.04;25.29;24-Apr-2015
+101912;INF955L01708;-;BARODA PIONEER BALANCE FUND - Plan A - Growth Option;42.54;42.11;42.54;24-Apr-2015
+119325;-;-;BARODA PIONEER BALANCE FUND - Plan B (Direct) - Dividend Option;26.00;25.74;26.00;24-Apr-2015
+119326;-;-;BARODA PIONEER BALANCE FUND - Plan B (Direct) - Growth Option;43.49;43.06;43.49;24-Apr-2015
+ 
+Birla Sun Life Mutual Fund
+ 
+120518;-;INF209K01ZB2;Birla Sun Life  95 Fund - Dividend - Direct Plan;169.81;168.11;169.81;24-Apr-2015
+120517;INF209K01ZC0;-;Birla Sun Life  95 Fund - Growth - Direct Plan;558.69;553.10;558.69;24-Apr-2015
+103154;INF209K01BS7;INF209K01EE1;Birla Sun Life 95 Fund-Plan A (Dividend);149.94;148.44;149.94;24-Apr-2015
+103155;INF209K01BT5;-;Birla Sun Life 95 Fund-Plan B(Growth);548.43;542.95;548.43;24-Apr-2015
+131671;-;-;Birla Sun Life Dynamic Asset Allocation Fund - Direct Plan - Dividend Option;17.41;17.24;17.41;24-Apr-2015
+131670;-;-;Birla Sun Life Dynamic Asset Allocation Fund - Direct Plan - Growth Option;36.89;36.52;36.89;24-Apr-2015
+131665;-;-;Birla Sun Life Dynamic Asset Allocation Fund - Regular Plan - Dividend Option;17.05;16.88;17.05;24-Apr-2015
+131666;-;-;Birla Sun Life Dynamic Asset Allocation Fund - Regular Plan - Growth Option;36.15;35.79;36.15;24-Apr-2015
+100035;-;-;Birla Sun Life Freedom Fund-Plan A (Dividend);14.55;14.40;14.55;21-Oct-2011
+100036;-;-;Birla Sun Life Freedom Fund-Plan B (Growth);30.91;30.60;30.91;21-Oct-2011

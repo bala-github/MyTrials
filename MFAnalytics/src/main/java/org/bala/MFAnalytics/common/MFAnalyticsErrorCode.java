@@ -2,18 +2,19 @@ package org.bala.MFAnalytics.common;
 
 public enum MFAnalyticsErrorCode {
 
-	DATA_FORMAT_EXCEPTION ("Data format was not as expected.")
+	DATA_FORMAT_EXCEPTION ("DATA_FORMAT_EXCEPTION.") ,
+	ERORR_READING_DATA("ERORR_READING_DATA.")
 	;
 	
-	private String message;
+	private String errorCode;
 
-	MFAnalyticsErrorCode(String message) {
+	MFAnalyticsErrorCode(String errorCode) {
 		
-		this.message = message;
+		this.errorCode = errorCode;
 	}
 	
-	public String getMessage() {
+	public String getErrorCode() {
 		
-		return message;
+		return errorCode;
 	}
 }
