@@ -4,8 +4,11 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.bala.MFAnalytics.common.MFAnalyticsException;
+import org.bala.MFAnalytics.data.MFData;
 import org.bala.MFAnalytics.data.MFDataReader;
 import org.bala.MFAnalytics.data.impl.TextFormatMFDataReader;
 import org.junit.Test;
@@ -17,7 +20,7 @@ public class TextFormatMFDataReaderTest {
 		
 		InputStream in = this.getClass().getResourceAsStream("/InvalidTextFormat.txt");
 
-		MFDataReader datareader = new TextFormatMFDataReader(in);
+	    new TextFormatMFDataReader(in);
 		
 	}
 	
@@ -28,11 +31,14 @@ public class TextFormatMFDataReaderTest {
 		
 		MFDataReader datareader = new TextFormatMFDataReader(in);
 		
+		List<MFData>  mflist = new ArrayList<MFData>();
+		
 		while(datareader.hasMFData()) {
 			
-			System.out.println(datareader.getMFData().toString());
+			mflist.add(datareader.getMFData());
 		}
 		
+		assertTrue(mflist.size() == 19);
 	}
 
 }

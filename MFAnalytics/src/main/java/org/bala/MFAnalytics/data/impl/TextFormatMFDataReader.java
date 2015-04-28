@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import org.bala.MFAnalytics.common.MFAnalyticsErrorCode;
 import org.bala.MFAnalytics.common.MFAnalyticsException;
@@ -63,12 +64,13 @@ public class TextFormatMFDataReader implements MFDataReader {
 			try {
 			
 				line = br.readLine();
-                
+                logger.trace("Read Line " + line);
 				if(line == null) {		
 				   return false;
 				} else if((mfdata = line.split(";")).length == 8) {
 				   return true;
 				} else 	if(line.endsWith("Mutual Fund")) {
+				   logger.trace("AMC: " + amc);	
 				   amc = line;		
 		    	}
 			}	
@@ -89,16 +91,24 @@ public class TextFormatMFDataReader implements MFDataReader {
 		
 		MFData data = new MFData();
 		
+		
 		data.setAmc(amc);
 		data.setCode(Long.parseLong(mfdata[SCHEME_CODE_INDEX]));
 		data.setIsinDivPayoutOrGrowth(mfdata[ISIN_DIVPAYOUTORGROWTH_INDEX]);
 		data.setIsinDivReinvestment(mfdata[ISIN_DIVREINVESTMENT_INDEX]);
 		data.setName(mfdata[NAME_INDEX]);
-		data.setNav(Double.parseDouble(mfdata[NAV_INDEX]));
-		data.setRp(Double.parseDouble(mfdata[RP_INDEX]));
-		data.setSp(Double.parseDouble(mfdata[SP_INDEX]));
-		data.setDate(LocalDate.parse(mfdata[DATE_INDEX], df));
-
+		try {
+			data.setNav(Double.parseDouble(mfdata[NAV_INDEX]));
+		} catch(NullPointerException | NumberFormatException e) {
+			 logger.error("Scheme:" + data.getName() + "Exception " + e.getMessage());
+		}
+		
+		try {			
+			data.setDate(LocalDate.parse(mfdata[DATE_INDEX], df));		
+		} catch(DateTimeParseException e) {
+		  logger.error("Scheme:" + data.getName() + "Exception " + e.getMessage());			
+		}
+		
 		return data;
 	}
 
