@@ -13,7 +13,7 @@ import org.bala.MFAnalytics.data.MFDataReader;
 import org.bala.MFAnalytics.data.impl.TextFormatMFDataReader;
 import org.junit.Test;
 
-public class TextFormatMFDataReaderTest {
+public class TestTextFormatMFDataReader {
 
 	@Test(expected = MFAnalyticsException.class)
 	public void testInvalidData() throws IOException, MFAnalyticsException {
@@ -39,6 +39,18 @@ public class TextFormatMFDataReaderTest {
 		}
 		
 		assertTrue(mflist.size() == 19);
+	}
+	
+	@Test
+	public void testMfNameRegex() {
+		
+		String name = "Tata Floating Rate Fund - Long Term Option Bonus/ Dividend";
+		String mfname = name.replaceAll(" -* *|-| */ *", "_");
+		
+		System.out.println(mfname);
+		
+		
+		
 	}
 
 }

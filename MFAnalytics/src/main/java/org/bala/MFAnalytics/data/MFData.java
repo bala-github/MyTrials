@@ -2,6 +2,13 @@ package org.bala.MFAnalytics.data;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+
+@JsonInclude(Include.NON_DEFAULT)
+//@JsonIgnoreProperties({"date"})
 public class MFData {
 
 	private long code;
@@ -12,7 +19,9 @@ public class MFData {
 	private double nav;
 	private double rp;
 	private double sp;
-	private LocalDate date;
+	
+	
+	private String date;
 
 	public long getCode() {
 		return code;
@@ -78,11 +87,11 @@ public class MFData {
 		this.sp = sp;
 	}
 
-	public LocalDate getDate() {
+	public String getDate() {
 		return date;
 	}
 
-	public void setDate(LocalDate date) {
+	public void setDate(String date) {
 		this.date = date;
 	}
 	

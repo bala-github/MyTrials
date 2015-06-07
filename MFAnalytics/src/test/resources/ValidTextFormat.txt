@@ -4,7 +4,7 @@ Open Ended Schemes(Balanced)
  
 Axis Mutual Fund
  
-120523;INF846K01ET8;INF846K01EU6;Axis Triple Advantage Fund - Direct Plan - Dividend Option;13.2886;12.8899;13.2886;24-Apr-2015
+120523;INF846K01ET8;INF846K01EU6;Axis Triple Advantage Fund - Direct Plan - Dividend Option;13.2886;12.8899;13.2886;25-Apr-2015
 120524;INF846K01EV4;-;Axis Triple Advantage Fund - Direct Plan - Growth Option;15.4279;14.9651;15.4279;24-Apr-2015
 113065;INF846K01776;INF846K01784;Axis Triple Advantage Fund - Dividend Option;12.2786;11.9102;12.2786;24-Apr-2015
 113064;INF846K01768;-;Axis Triple Advantage Fund - Growth Option;15.0545;14.6029;15.0545;24-Apr-2015

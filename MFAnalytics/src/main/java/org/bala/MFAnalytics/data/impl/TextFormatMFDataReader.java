@@ -41,12 +41,18 @@ public class TextFormatMFDataReader implements MFDataReader {
 	
 	private String[] mfdata = null;
 	
-	public TextFormatMFDataReader(InputStream in) throws IOException, MFAnalyticsException {
+	public TextFormatMFDataReader(InputStream in) throws  MFAnalyticsException {
 		
 		br = new BufferedReader(new InputStreamReader(in));
 		
-		String format = br.readLine();
 		
+		String format = null;
+		try {
+			format = br.readLine();
+		} catch(IOException e) {
+			logger.error("Error reading data from input stream.");
+			throw new MFAnalyticsException(MFAnalyticsErrorCode.ERORR_READING_DATA);
+		}
 		if(!format.equalsIgnoreCase(FORMAT_LINE)) {
 			logger.error("Format not as expected. String read " + format);
 			throw new MFAnalyticsException(MFAnalyticsErrorCode.DATA_FORMAT_EXCEPTION);
@@ -94,8 +100,12 @@ public class TextFormatMFDataReader implements MFDataReader {
 		
 		data.setAmc(amc);
 		data.setCode(Long.parseLong(mfdata[SCHEME_CODE_INDEX]));
+		
+		/*
+		 * Not required
 		data.setIsinDivPayoutOrGrowth(mfdata[ISIN_DIVPAYOUTORGROWTH_INDEX]);
 		data.setIsinDivReinvestment(mfdata[ISIN_DIVREINVESTMENT_INDEX]);
+		*/
 		data.setName(mfdata[NAME_INDEX]);
 		try {
 			data.setNav(Double.parseDouble(mfdata[NAV_INDEX]));
@@ -104,7 +114,7 @@ public class TextFormatMFDataReader implements MFDataReader {
 		}
 		
 		try {			
-			data.setDate(LocalDate.parse(mfdata[DATE_INDEX], df));		
+			data.setDate(LocalDate.parse(mfdata[DATE_INDEX], df).toString());				
 		} catch(DateTimeParseException e) {
 		  logger.error("Scheme:" + data.getName() + "Exception " + e.getMessage());			
 		}
