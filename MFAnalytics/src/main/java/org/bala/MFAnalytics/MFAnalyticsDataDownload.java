@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
-import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,8 +37,6 @@ public class MFAnalyticsDataDownload {
 	
 	private String currentDataDir;
 	
-	private LocalDate currentDate;
-	
 	private Map<String, List<String>> schemes;
 	
 	private ObjectMapper mapper = new ObjectMapper();
@@ -47,7 +44,6 @@ public class MFAnalyticsDataDownload {
 	private String rollUpDataDir;
 	
 	public MFAnalyticsDataDownload (String outputDir) {
-		currentDate = LocalDate.now();
 		this.currentDataDir = outputDir + "/current";		
 		this.rollUpDataDir = outputDir + "/rollup";
 		schemes = new TreeMap<String, List<String>>();
@@ -79,7 +75,7 @@ public class MFAnalyticsDataDownload {
 		
 		
 		
-		FileOutputStream fos = null;
+	
 		FileInputStream fis = null;
 		
 		
@@ -97,15 +93,21 @@ public class MFAnalyticsDataDownload {
 			
 			try {
 				String mfname = mfdata.getName().replaceAll(" -* *|-| */ *", "_");
+				String mfcurrentdir = currentDataDir + "/" + mfdata.getAmc();
 				
-				writeDataToFile(currentDataDir + "/" + mfname, mfdata);
+				Files.createDirectories(FileSystems.getDefault().getPath(mfcurrentdir));
+				writeDataToFile(mfcurrentdir + "/"+ mfname, mfdata);
 				
 				//read mf file from rollupdir.
 				
 				LinkedList<MFData> rollUpData = new LinkedList<MFData>();
+				String mfrollupdir = rollUpDataDir + "/" + mfdata.getAmc() ;
+				Files.createDirectories(FileSystems.getDefault().getPath(mfrollupdir));
 				try {
-					fis = new FileInputStream(rollUpDataDir + "/" + mfname);
-					rollUpData = mapper.readValue(fis,new TypeReference<LinkedList<MFData>>(){});
+					fis = new FileInputStream(mfrollupdir + "/" + mfname);
+					if(fis != null) {
+						rollUpData = mapper.readValue(fis,new TypeReference<LinkedList<MFData>>(){});
+					}
 				} catch(Exception e) {
 					logger.error("Error reading rollUpData for scheme " + mfdata.getName());
 				} finally {
@@ -123,7 +125,7 @@ public class MFAnalyticsDataDownload {
 						rollUpData.remove(0);
 					}
 					//write update mf file to rollupdir.
-					writeDataToFile(rollUpDataDir + "/" + mfname, rollUpData);
+					writeDataToFile(mfrollupdir + "/"+ mfname, rollUpData);
 				}
 	
 			} catch (IOException  e) {
@@ -132,13 +134,11 @@ public class MFAnalyticsDataDownload {
 			} 	
 		}
 		
-		fos = new FileOutputStream(currentDataDir + "/amcs" );
-		
-		mapper.writeValue(fos, amcs);
-	
-		fos.close();
+		//Write List of AMC's
+		writeDataToFile(currentDataDir + "/amcs.json", amcs);
 		
 		for(String amc : amcs) {
+			//For each AMC write list of schemes.
 			writeDataToFile(currentDataDir + "/" + amc + "_" + "schemes.json", schemes.get(amc));
 		}
 

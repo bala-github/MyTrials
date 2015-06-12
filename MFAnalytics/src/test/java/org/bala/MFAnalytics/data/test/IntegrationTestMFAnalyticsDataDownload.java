@@ -1,7 +1,5 @@
 package org.bala.MFAnalytics.data.test;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
 import java.io.InputStream;
 
