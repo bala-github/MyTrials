@@ -1,0 +1,14 @@
+i) Input Filter checks for a cookie which indicates a user has logged in.
+   If cookie is not there, we have to redirect to "GET https://github.com/login/oauth/authorize" passing client_id and scope.
+   This filter will not be applicable for /mynotes/welcome 
+   
+ii) /mynotes/welcome
+
+     Establishes session, by inserting a cookie.
+     Returns html page
+     
+iii) /mynotes/list
+
+iV)  /mynotes/add
+
+v)   /mynotes/remove      
