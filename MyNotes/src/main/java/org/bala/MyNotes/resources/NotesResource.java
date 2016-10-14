@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.dropbox.core.DbxAppInfo;
+import com.dropbox.core.DbxException;
 import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.FileMetadata;
@@ -73,12 +74,14 @@ public class NotesResource {
 		try {
 	
 			
-			return client.files().listFolder("");
+			ListFolderResult result = client.files().listFolderBuilder("").withIncludeMediaInfo(true).start();
+			logger.info("List Folder Result:" + mapper.writeValueAsString(result));
+			return result;
 			
 		} catch (Exception  e) {
 			logger.error("Exception in fetching list." + e.getMessage());
 			e.printStackTrace();
-			throw new WebApplicationException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR_500);
+			throw new MyNotesException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR_500);
 		}
 
 	}
@@ -105,7 +108,7 @@ public class NotesResource {
 		} catch (Exception e) {
 			logger.error("Exception in fetching list." + e.getMessage());
 			e.printStackTrace();
-			throw new WebApplicationException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR_500);
+			throw new MyNotesException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR_500);
 		}
 	}
 	
@@ -127,7 +130,7 @@ public class NotesResource {
 		} catch (Exception e) {
 			logger.error("Exception in fetching list." + e.getMessage());
 			e.printStackTrace();
-			throw new WebApplicationException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR_500);
+			throw new MyNotesException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR_500);
 		}
 		
 	}	
@@ -144,10 +147,10 @@ public class NotesResource {
 		
 			return client.files().getTemporaryLink("/" + note.getTitle());
 			
-		} catch (Exception e) {
-			logger.error("Exception in fetching list." + e.getMessage());
+		} catch (DbxException e) {
+			logger.error("Exception in fetching list." + e.getMessage() + "-" + e.getMessage());
 			e.printStackTrace();
-			throw new WebApplicationException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR_500);
+			throw new MyNotesException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR_500);
 		}
 		
 	}

@@ -9,18 +9,21 @@
   <script>
     $(document).on('click','.notemarker',function(){
  
-        $("#" + this.id).toggleClass("glyphicon-triangle-top");
-        $("#" + this.id).toggleClass("glyphicon-triangle-bottom");
+ 
 		console.log('file name');
 		console.log($("#" + this.id + "_label").text());
 		
-		if($("#" + this.id).hasClass("glyphicon-triangle-bottom")) {
+		if($("#" + this.id).hasClass("glyphicon-triangle-top")) {
 			$("#" + this.id +"_description").toggle();
         	$("#" + this.id + "_action").toggle();
-            
+            $("#" + this.id).toggleClass("glyphicon-triangle-top");
+            $("#" + this.id).toggleClass("glyphicon-triangle-bottom");
             
         } else {
           console.log('Fetching details');
+          $("#" + this.id +"_loading").toggle();
+          $("#" + this.id +"_error").hide();
+           
 		  var payload = { };
           payload = {
               title : $("#" + this.id + "_label").text(), 
@@ -36,11 +39,12 @@
               console.log('errorStatus:' + errorStatus);     
               console.log('err:' + err);
               console.log(xhr.status); 
-              var unregisteredForm = document.getElementById("unregisteredForm");
-              unregisteredForm.setAttribute("class", "displayedPage");   
+              $("#" + this.index +"_error").text(xhr.responseText).show();
+              $("#" + this.index +"_loading").toggle();
 			}, 
 			success : function(data, status, xhr) {
 			 console.log(this.index);
+			 
 			  $.ajax({
 			    type : 'GET',
 			    url : data['link'],
@@ -52,10 +56,12 @@
 			        var content = JSON.parse(data);
 			        console.log('url'+ content['title']);
 			        $("textarea#" + this.index + "_description_text").val(content['title']);
-        			
+        			$("#" + this.index +"_loading").toggle();
         			$("#" + this.index +"_description").toggle();
         			$("#" + this.index + "_action").toggle();
 			        $("#" + this.index + "_action").focus();
+			        $("#" + this.index).toggleClass("glyphicon-triangle-top");
+        			$("#" + this.index).toggleClass("glyphicon-triangle-bottom");
 			    }
 			  });			
 			}		
@@ -86,6 +92,7 @@
     
     $(document).ready(function() {
     	console.log("Going to fetch list of notes");
+    	$("#loading_details").toggle();
     	  $.ajax({
            type : 'GET',
            url  : '/list',
@@ -94,8 +101,9 @@
               console.log('errorStatus:' + errorStatus);
               console.log('err:' + err);
               console.log(xhr.status);
-              var unregisteredForm = document.getElementById("unregisteredForm");
-              unregisteredForm.setAttribute("class", "displayedPage");
+              console.log(xhr.responseText);
+              $("#view_notes_div").text(xhr.responseText);
+              $("#loading_details").toggle(); 
           }, 
           success : function(data, status, xhr) {
              
@@ -105,7 +113,7 @@
               var i=1; 
               jQuery.each(data['entries'], function() {
               	console.log(this['name']);
-              	 htmlContent= htmlContent + `<div class="row">
+              	 htmlContent= htmlContent + `<div id="note`+ i +`_row" class="row">
             <div class="col-md-10 col-xs-12">
             <table>
                <tr> 
@@ -115,7 +123,12 @@
              </table>  
             </div>
         </div>
-
+		<div class="row" id="note`+ i + `_loading" style ="display:none;">
+			Loading...
+		</div>
+		 <div class="row" id="note`+ i + `_error" style ="display:none;">
+			
+		</div>
         <div class="row" id="note`+ i + `_description" style="display:none;">
             <div class="col-md-6 col-xs-12">
                 <textarea id="note` + i + `_description_text" class="form-control" rows="5"> www.config.tomcat.com </textarea>
@@ -135,8 +148,10 @@
               	`;
               	i=i+1;
               });  
-              $("#view_notes_div").html(htmlContent); 
+              $("#view_notes_div").html(htmlContent);
+              $("#loading_details").toggle(); 
           }
+          
         });
     });    
   </script>
@@ -187,6 +202,9 @@
   </p>
 </div>
 
+<div id="loading_details" style="display:none;">
+  Loading...
+</div>
 <form id="view_notes_form">
   <div id="view_notes_div">
    
@@ -203,7 +221,7 @@
 
         <div class="row">
             <div class="col-md-8 col-sm-12">
-                <input type="text" class="form-control">
+                <input id="add_note_title" type="text" class="form-control">
             </div>
         </div>
      
@@ -215,22 +233,22 @@
 
         <div class="row">
             <div class="col-md-8 col-sm-12">
-                <textarea class="form-control" rows="5"></textarea>
+                <textarea id="add_note_description" class="form-control" rows="5"></textarea>
             </div>
         </div>
 
         <div class="row">
              
-            <div class="checkbox col-sm-offset-0 col-sm-2 col-xs-offset-0 col-xs-4" ><label><input type="checkbox">URL</label> </div>
+            <div class="checkbox col-sm-offset-0 col-sm-2 col-xs-offset-0 col-xs-4" ><label><input id="add_note_isur" type="checkbox">URL</label> </div>
 
         </div>
 
         <div class="row">
             <div class="col-sm-1 col-xs-2" >
-                 <button class="btn btn-primary" type="button">Save</button>
+                 <button id="add_note" class="btn btn-primary" type="button">Save</button>
             </div>
             <div class="col-sm-1 col-sm-offset-0  col-xs-offset-1 col-xs-2" >
-             <button class="btn btn-primary" type="button">Cancel</button>
+             <button id="remove_note" class="btn btn-primary" type="button">Cancel</button>
             </div>
         </div> 
 
