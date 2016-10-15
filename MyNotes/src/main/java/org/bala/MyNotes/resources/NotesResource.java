@@ -145,7 +145,7 @@ public class NotesResource {
 		
 		try {
 		
-			return client.files().getTemporaryLink("/" + note.getTitle());
+			return client.files().getTemporaryLink("/" + note.getTitle() + ".json");
 			
 		} catch (DbxException e) {
 			logger.error("Exception in fetching list." + e.getMessage() + "-" + e.getMessage());

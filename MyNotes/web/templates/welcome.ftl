@@ -14,12 +14,15 @@
 		console.log($("#" + this.id + "_label").text());
 		
 		if($("#" + this.id).hasClass("glyphicon-triangle-top")) {
-			$("#" + this.id +"_description").toggle();
-        	$("#" + this.id + "_action").toggle();
+			// user is hiding details.
+			$("#" + this.id +"_description").hide();
+        	$("#" + this.id + "_action").hide();
+        	$("#" + this.id +"_error").hide();
             $("#" + this.id).toggleClass("glyphicon-triangle-top");
             $("#" + this.id).toggleClass("glyphicon-triangle-bottom");
             
         } else {
+          //user is fetching details
           console.log('Fetching details');
           $("#" + this.id +"_loading").toggle();
           $("#" + this.id +"_error").hide();
@@ -41,6 +44,8 @@
               console.log(xhr.status); 
               $("#" + this.index +"_error").text(xhr.responseText).show();
               $("#" + this.index +"_loading").toggle();
+              $("#" + this.index).toggleClass("glyphicon-triangle-top");
+              $("#" + this.index).toggleClass("glyphicon-triangle-bottom");
 			}, 
 			success : function(data, status, xhr) {
 			 console.log(this.index);
@@ -55,10 +60,10 @@
 			    	console.log(this.index);
 			        var content = JSON.parse(data);
 			        console.log('url'+ content['title']);
-			        $("textarea#" + this.index + "_description_text").val(content['title']);
+			        $("textarea#" + this.index + "_description_text").val(content['description']);
         			$("#" + this.index +"_loading").toggle();
-        			$("#" + this.index +"_description").toggle();
-        			$("#" + this.index + "_action").toggle();
+        			$("#" + this.index +"_description").show();
+        			$("#" + this.index + "_action").show();
 			        $("#" + this.index + "_action").focus();
 			        $("#" + this.index).toggleClass("glyphicon-triangle-top");
         			$("#" + this.index).toggleClass("glyphicon-triangle-bottom");
@@ -118,7 +123,7 @@
             <table>
                <tr> 
                <td style="vertical-align: top;">
-               <span class="glyphicon glyphicon-triangle-bottom notemarker" id="note`+ i +`"></span></td><td><label id="note`+ i + `_label" style="white-space:normal !important;">`+  this['name'] + `</label></td>
+               <span class="glyphicon glyphicon-triangle-bottom notemarker" id="note`+ i +`"></span></td><td><label id="note`+ i + `_label" style="white-space:normal !important;">`+  this['name'].replace('.json','')  + `</label></td>
                </tr>
              </table>  
             </div>
@@ -153,7 +158,48 @@
           }
           
         });
-    });    
+    });   
+    
+    $(document).on('click', '#add_note_button', function() {
+    	console.log('Add note button clicked');
+    	console.log('Title:' + $('#add_note_title').val());
+    	console.log('Description:' + $('textarea#add_note_descripition').val());
+    	console.log('isChecked:' + $('#add_note_isurl').prop('checked'));
+    	$("#add_note_status").text('Uploading Note...'); 
+    	$("#add_note_status").show();
+    
+        var payload = { };
+
+        payload = {
+              title : $('#add_note_title').val(), 
+              description : $('textarea#add_note_descripition').val(),
+              isurl : $('#add_note_isurl').prop('checked')
+            };
+            
+    	$.ajax({
+           type : 'POST',
+           url  : '/add',
+           contentType : 'application/json',
+           data : JSON.stringify(payload),
+           error : function(xhr,errorStatus,err) {
+              console.log('errorStatus:' + errorStatus);     
+              console.log('err:' + err);
+              console.log(xhr.status); 
+			}, 
+			success : function(data, status, xhr) {
+			$("#add_note_status").text('Added Note...');
+			 console.log('Status:' + status);
+			}
+		});	 
+    });
+     
+   /*  
+    $(document).ready(function () {
+        $(".navbar-nav li a").click(function(event) {
+        $(".navbar-collapse").collapse('hide');
+      });
+    });
+     */
   </script>
 </head>
 
@@ -213,7 +259,11 @@
 
 <form id="add_note_form" style="display:none;">
 
-        <div class="row">
+		<div id="add_note_status" class="row text-center" style="display:none;">
+        	
+        </div>
+        
+        <div class="row" >
             <div class="col-xs-12">
                <label style="white-space:normal !important;">Title</label></td>
             </div>
@@ -233,22 +283,22 @@
 
         <div class="row">
             <div class="col-md-8 col-sm-12">
-                <textarea id="add_note_description" class="form-control" rows="5"></textarea>
+                <textarea id="add_note_descripition" class="form-control" rows="5"></textarea>
             </div>
         </div>
 
         <div class="row">
              
-            <div class="checkbox col-sm-offset-0 col-sm-2 col-xs-offset-0 col-xs-4" ><label><input id="add_note_isur" type="checkbox">URL</label> </div>
+            <div class="checkbox col-sm-offset-0 col-sm-2 col-xs-offset-0 col-xs-4" ><label><input id="add_note_isurl" type="checkbox">URL</label> </div>
 
         </div>
 
         <div class="row">
             <div class="col-sm-1 col-xs-2" >
-                 <button id="add_note" class="btn btn-primary" type="button">Save</button>
+                 <button id="add_note_button" class="btn btn-primary" type="button">Save</button>
             </div>
             <div class="col-sm-1 col-sm-offset-0  col-xs-offset-1 col-xs-2" >
-             <button id="remove_note" class="btn btn-primary" type="button">Cancel</button>
+             <button id="remove_note_button" class="btn btn-primary" type="button">Cancel</button>
             </div>
         </div> 
 
