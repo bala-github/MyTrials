@@ -7,110 +7,89 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
   <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
   <script>
-    $(document).on('click','.notemarker',function(){
  
- 
-		console.log('file name');
-		console.log($("#" + this.id + "_label").text());
-		
-		if($("#" + this.id).hasClass("glyphicon-triangle-top")) {
-			// user is hiding details.
-			$("#" + this.id +"_description").hide();
-        	$("#" + this.id + "_action").hide();
-        	$("#" + this.id +"_error").hide();
-            $("#" + this.id).toggleClass("glyphicon-triangle-top");
-            $("#" + this.id).toggleClass("glyphicon-triangle-bottom");
-            
-        } else {
-          //user is fetching details
-          console.log('Fetching details');
-          $("#" + this.id +"_loading").toggle();
-          $("#" + this.id +"_error").hide();
-           
-		  var payload = { };
-          payload = {
-              title : $("#" + this.id + "_label").text(), 
-            };
-        
-          $.ajax({
-           type : 'POST',
-           url  : '/details',
-           contentType : 'application/json',
-           index : this.id,
-           data : JSON.stringify(payload),
-           error : function(xhr,errorStatus,err) {
+ 	function send_ajax_get(url, settings, successHandler, errorHandler) {
+ 	
+ 		if(typeof settings == 'undefined') {
+ 			settings = {};
+ 		} 
+ 		
+ 		if(typeof errorHandler == 'undefined') {
+ 			errorHandler = function (xhr,errorStatus,err) {};
+ 		} 
+ 		
+ 		$.ajax({
+ 			type : 'GET',
+ 			url : url,
+ 			settings : settings,
+ 			success : successHandler,
+ 			error : errorHandler
+ 		});
+ 	}
+ 	
+ 	function send_ajax_post(url, contentType, data, settings,  successHandler, errorHandler) {
+ 	
+ 		if(typeof settings == 'undefined') {
+ 			settings = {};
+ 		} 
+ 		
+ 		if(typeof errorHandler == 'undefined') {
+ 			errorHandler = function (xhr,errorStatus,err) {};
+ 		} 
+ 		
+ 		$.ajax({
+ 			type : 'POST',
+ 			url : url,
+ 			contentType : contentType,
+ 			data : data,
+ 			settings : settings,
+ 			success : successHandler,
+ 			error : errorHandler
+ 		});
+ 	}
+ 	 	
+    function handle_get_details_success(data, status, xhr) {
+    	console.log(data);
+    	console.log(this.settings.index );
+        var content = JSON.parse(data);
+        console.log('url'+ content['title']);
+        $("textarea#" + this.settings.index  + "_description_text").val(content['description']);
+		$("#" + this.settings.index +"_loading").toggle();
+		$("#" + this.settings.index +"_description").show();
+		$("#" + this.settings.index  + "_action").show();
+        $("#" + this.settings.index  + "_action").focus();
+        $("#" + this.settings.index ).toggleClass("glyphicon-triangle-top");
+		$("#" + this.settings.index ).toggleClass("glyphicon-triangle-bottom");
+	}
+	
+	function handle_post_get_notes_success(data, status, xhr) {
+			 console.log("Modifed:" + this.settings.index);
+			 var settings = {};
+			 settings = {'index' : this.settings.index};
+			 send_ajax_get(data['link'],settings, handle_get_details_success, 'undefined');
+	
+	}	
+			    
+   function handle_post_get_notes_error(xhr,errorStatus,err) {
               console.log('errorStatus:' + errorStatus);     
               console.log('err:' + err);
               console.log(xhr.status); 
-              $("#" + this.index +"_error").text(xhr.responseText).show();
-              $("#" + this.index +"_loading").toggle();
-              $("#" + this.index).toggleClass("glyphicon-triangle-top");
-              $("#" + this.index).toggleClass("glyphicon-triangle-bottom");
-			}, 
-			success : function(data, status, xhr) {
-			 console.log(this.index);
-			 
-			  $.ajax({
-			    type : 'GET',
-			    url : data['link'],
-			    index : this.index,
-			    contentType: 'application/json',
-			    success : function(data, status, xhr) {
-			    	console.log(data);
-			    	console.log(this.index);
-			        var content = JSON.parse(data);
-			        console.log('url'+ content['title']);
-			        $("textarea#" + this.index + "_description_text").val(content['description']);
-        			$("#" + this.index +"_loading").toggle();
-        			$("#" + this.index +"_description").show();
-        			$("#" + this.index + "_action").show();
-			        $("#" + this.index + "_action").focus();
-			        $("#" + this.index).toggleClass("glyphicon-triangle-top");
-        			$("#" + this.index).toggleClass("glyphicon-triangle-bottom");
-			    }
-			  });			
-			}		
-        });
-      }  
-        
-    });    
-
-    $(document).on('click', '#welcome_link', function() {
-    	$(".jumbotron").show();
-    	$("#view_notes_form").show();
-    	$("#add_note_form").hide();    	
-    });
-
-    
-    $(document).on('click', '#view_notes_link', function() {
-    	$(".jumbotron").hide();
-    	$("#view_notes_form").show();
-    	$("#add_note_form").hide();
-    	
-    });
-        
-     $(document).on('click', '#add_note_link', function() {
-    	$(".jumbotron").hide();
-    	$("#view_notes_form").hide();
-    	$("#add_note_form").show();    	
-    });
-    
-    $(document).ready(function() {
-    	console.log("Going to fetch list of notes");
-    	$("#loading_details").toggle();
-    	  $.ajax({
-           type : 'GET',
-           url  : '/list',
-           contentType : 'application/json',
-           error : function(xhr,errorStatus,err) {
+              $("#" + this.settings.index +"_error").text(xhr.responseText).show();
+              $("#" + this.settings.index +"_loading").toggle();
+              $("#" + this.settings.index).toggleClass("glyphicon-triangle-top");
+              $("#" + this.settings.index).toggleClass("glyphicon-triangle-bottom");
+	}
+	
+	function handle_get_list_notes_error(xhr,errorStatus,err) {
               console.log('errorStatus:' + errorStatus);
               console.log('err:' + err);
               console.log(xhr.status);
               console.log(xhr.responseText);
               $("#view_notes_div").text(xhr.responseText);
               $("#loading_details").toggle(); 
-          }, 
-          success : function(data, status, xhr) {
+     }
+          
+	function handle_get_list_notes_success(data, status, xhr) {
              
               console.log("Data:" + data); 
               
@@ -155,9 +134,68 @@
               });  
               $("#view_notes_div").html(htmlContent);
               $("#loading_details").toggle(); 
-          }
+     }
+			
+    $(document).on('click','.notemarker',function(){
+ 
+ 
+ 
+		console.log('file name');
+		console.log($("#" + this.id + "_label").text());
+		
+		if($("#" + this.id).hasClass("glyphicon-triangle-top")) {
+			// user is hiding details.
+			$("#" + this.id +"_description").hide();
+        	$("#" + this.id + "_action").hide();
+        	$("#" + this.id +"_error").hide();
+            $("#" + this.id).toggleClass("glyphicon-triangle-top");
+            $("#" + this.id).toggleClass("glyphicon-triangle-bottom");
+            
+        } else {
+          //user is fetching details
+          console.log('Fetching details');
+          $("#" + this.id +"_loading").toggle();
+          $("#" + this.id +"_error").hide();
+           
+		  var payload = { };
+          payload = {
+              title : $("#" + this.id + "_label").text(), 
+            };
           
-        });
+          var settings = {};
+          
+          settings = {'index' : this.id};
+          
+          send_ajax_post('/details', 'application/json',  JSON.stringify(payload), settings, handle_post_get_notes_success, handle_post_get_notes_error);
+          
+      }  
+        
+    });    
+
+    $(document).on('click', '#welcome_link', function() {
+    	$(".jumbotron").show();
+    	$("#view_notes_form").show();
+    	$("#add_note_form").hide();    	
+    });
+
+    
+    $(document).on('click', '#view_notes_link', function() {
+    	$(".jumbotron").hide();
+    	$("#view_notes_form").show();
+    	$("#add_note_form").hide();
+    	
+    });
+        
+     $(document).on('click', '#add_note_link', function() {
+    	$(".jumbotron").hide();
+    	$("#view_notes_form").hide();
+    	$("#add_note_form").show();    	
+    });
+    
+    $(document).ready(function() {
+    	console.log("Going to fetch list of notes");
+    	$("#loading_details").toggle();
+    	send_ajax_get('/list', 'undefined', handle_get_list_notes_success, handle_get_list_notes_error);
     });   
     
     $(document).on('click', '#add_note_button', function() {
@@ -175,24 +213,20 @@
               description : $('textarea#add_note_descripition').val(),
               isurl : $('#add_note_isurl').prop('checked')
             };
-            
-    	$.ajax({
-           type : 'POST',
-           url  : '/add',
-           contentType : 'application/json',
-           data : JSON.stringify(payload),
-           error : function(xhr,errorStatus,err) {
-              console.log('errorStatus:' + errorStatus);     
-              console.log('err:' + err);
-              console.log(xhr.status); 
-			}, 
-			success : function(data, status, xhr) {
-			$("#add_note_status").text('Added Note...');
-			 console.log('Status:' + status);
-			}
-		});	 
+
+		send_ajax_post('/add', 'application/json', JSON.stringify(payload), 'undefined', handle_add_note_success, handle_add_note_error);
     });
      
+    function handle_add_note_success(data, status, xhr) {
+			$("#add_note_status").text('Added Note...');
+			 console.log('Status:' + status);
+	}
+	
+	function handle_add_note_error(data, status, xhr) {
+			$("#add_note_status").text('Added Note...');
+			 console.log('Status:' + status);
+	}
+	
    /*  
     $(document).ready(function () {
         $(".navbar-nav li a").click(function(event) {
