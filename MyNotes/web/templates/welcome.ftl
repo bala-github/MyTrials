@@ -175,7 +175,12 @@
     $(document).on('click', '#welcome_link', function() {
     	$(".jumbotron").show();
     	$("#view_notes_form").show();
-    	$("#add_note_form").hide();    	
+    	$("#add_note_form").hide(); 
+    	$("#welcome").addClass('active');
+    	$("#add_notes").removeClass('active');
+    	$("#view_notes").removeClass('active');  
+    	
+    	$(".navbar-collapse").collapse('hide'); 	
     });
 
     
@@ -183,13 +188,24 @@
     	$(".jumbotron").hide();
     	$("#view_notes_form").show();
     	$("#add_note_form").hide();
+    	$("#welcome").removeClass('active');
+    	$("#add_notes").removeClass('active');
+    	$("#view_notes").addClass('active'); 
+    	
+    	$(".navbar-collapse").collapse('hide');    	
     	
     });
         
      $(document).on('click', '#add_note_link', function() {
     	$(".jumbotron").hide();
     	$("#view_notes_form").hide();
-    	$("#add_note_form").show();    	
+    	$("#add_note_form").show();   
+    	clear_add_notes_screen(); 	
+    	$("#welcome").removeClass('active');
+    	$("#add_notes").addClass('active');
+    	$("#view_notes").removeClass('active'); 
+    	
+    	$(".navbar-collapse").collapse('hide');    	
     });
     
     $(document).ready(function() {
@@ -197,6 +213,13 @@
     	$("#loading_details").toggle();
     	send_ajax_get('/list', 'undefined', handle_get_list_notes_success, handle_get_list_notes_error);
     });   
+    
+    function clear_add_notes_screen() {
+    	$('textarea#add_note_descripition').val('');
+    	$('#add_note_title').val('');
+    	$('#add_note_isurl').prop('checked', false);
+    }
+    $(document).on('click', '#remove_note_button', clear_add_notes_screen());
     
     $(document).on('click', '#add_note_button', function() {
     	console.log('Add note button clicked');
@@ -252,10 +275,10 @@
     </div>
     <div class="collapse navbar-collapse" id="myNavbar">
       <ul class="nav navbar-nav">
-        <li class="active"><a id="welcome_link" href="#">About</a></li>
+        <li id="welcome" class="active"><a id="welcome_link" href="#">About</a></li>
       
-            <li><a id="view_notes_link" href="#">View Notes</a></li>
-            <li><a id="add_note_link" href="#">Add a Note</a></li>
+            <li id="view_notes"> <a id="view_notes_link" href="#">View Notes</a></li>
+            <li id="add_notes"> <a id="add_note_link" href="#">Add a Note</a></li>
         
       </ul>
     
