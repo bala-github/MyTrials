@@ -37,6 +37,7 @@ public class MyNotesApplication extends Application<MyNotesConfiguration> {
     	super.initialize(bootstrap);
     	//for request coming under path /html look under /html/ directory
     	bootstrap.addBundle(new AssetsBundle("/html", "/html", "mynotes.html", "html"));
+    	bootstrap.addBundle(new AssetsBundle("/scripts", "/scripts", "", "scripts"));
     	bootstrap.addBundle(new ViewBundle<MyNotesConfiguration>());
     }
 	    

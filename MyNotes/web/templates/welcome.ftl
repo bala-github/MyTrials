@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
   <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+  <script src="scripts/base64.js"></script>
   <script>
  
  	function send_ajax_get(url, settings, successHandler, errorHandler) {
@@ -86,7 +87,7 @@
               console.log(xhr.status);
               console.log(xhr.responseText);
               $("#view_notes_div").text(xhr.responseText);
-              $("#loading_details").toggle(); 
+              $("#loading_details").hide(); 
      }
           
 	function handle_get_list_notes_success(data, status, xhr) {
@@ -97,12 +98,12 @@
               var i=1; 
               jQuery.each(data['entries'], function() {
               	console.log(this['name']);
-              	 htmlContent= htmlContent + `<div id="note`+ i +`_row" class="row">
+              	 htmlContent= htmlContent + `<div id="note`+ i +`_row" class="row note_row">
             <div class="col-md-10 col-xs-12">
             <table>
                <tr> 
                <td style="vertical-align: top;">
-               <span class="glyphicon glyphicon-triangle-bottom notemarker" id="note`+ i +`"></span></td><td><label id="note`+ i + `_label" style="white-space:normal !important;">`+  this['name'].replace('.json','')  + `</label></td>
+               <span class="glyphicon glyphicon-triangle-bottom notemarker" id="note`+ i +`"></span></td><td><label id="note`+ i + `_label" style="white-space:normal !important;">`+ Base64.decode(this['name'].replace('.json', ''))   + `</label></td>
                </tr>
              </table>  
             </div>
@@ -133,7 +134,7 @@
               	i=i+1;
               });  
               $("#view_notes_div").html(htmlContent);
-              $("#loading_details").toggle(); 
+              $("#loading_details").hide(); 
      }
 			
     $(document).on('click','.notemarker',function(){
@@ -159,7 +160,7 @@
            
 		  var payload = { };
           payload = {
-              title : $("#" + this.id + "_label").text(), 
+              title : Base64.encodeURI($("#" + this.id + "_label").text()), 
             };
           
           var settings = {};
@@ -181,6 +182,9 @@
     	$("#view_notes").removeClass('active');  
     	
     	$(".navbar-collapse").collapse('hide'); 	
+    	
+    	$("#loading_details").show();
+    	send_ajax_get('/list', 'undefined', handle_get_list_notes_success, handle_get_list_notes_error);
     });
 
     
@@ -192,7 +196,10 @@
     	$("#add_notes").removeClass('active');
     	$("#view_notes").addClass('active'); 
     	
-    	$(".navbar-collapse").collapse('hide');    	
+    	$(".navbar-collapse").collapse('hide'); 
+    	
+    	$("#loading_details").show();
+    	send_ajax_get('/list', 'undefined', handle_get_list_notes_success, handle_get_list_notes_error);   	
     	
     });
         
@@ -210,7 +217,7 @@
     
     $(document).ready(function() {
     	console.log("Going to fetch list of notes");
-    	$("#loading_details").toggle();
+    	$("#loading_details").show();
     	send_ajax_get('/list', 'undefined', handle_get_list_notes_success, handle_get_list_notes_error);
     });   
     
@@ -232,7 +239,7 @@
         var payload = { };
 
         payload = {
-              title : $('#add_note_title').val(), 
+              title : Base64.encodeURI($('#add_note_title').val()), 
               description : $('textarea#add_note_descripition').val(),
               isurl : $('#add_note_isurl').prop('checked')
             };
@@ -243,6 +250,7 @@
     function handle_add_note_success(data, status, xhr) {
 			$("#add_note_status").text('Added Note...');
 			 console.log('Status:' + status);
+			 clear_add_notes_screen();
 	}
 	
 	function handle_add_note_error(data, status, xhr) {

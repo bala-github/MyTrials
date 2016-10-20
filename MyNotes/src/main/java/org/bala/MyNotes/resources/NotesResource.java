@@ -15,6 +15,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.bala.MyNotes.Utils.Utils;
 import org.bala.MyNotes.configuration.MyNotesConfiguration;
 import org.bala.MyNotes.configuration.MyNotesConstant;
 import org.bala.MyNotes.handlers.LoginHandler;
