@@ -75,7 +75,9 @@ public class NotesResource {
 		
 		try {
 	
-			
+			if(path.equalsIgnoreCase("/")) {
+				path = ""; 
+			}
 			ListFolderResult result = client.files().listFolderBuilder(path).withIncludeMediaInfo(true).start();
 			logger.info("List Folder Result:" + mapper.writeValueAsString(result));
 			return result;
@@ -98,8 +100,18 @@ public class NotesResource {
 		
 		DbxClientV2 client = new DbxClientV2(requestConfig, user.getAccessToken());
 		
+		
 		try {
-			FileMetadata filemetadata = client.files().uploadBuilder(note.getFolder() + "/" + note.getTitle() +".json")
+			
+			if(note.getFolder().equalsIgnoreCase("/")) {
+				note.setFolder("");
+			}
+			
+			if(!note.getFolder().endsWith("/")) {
+				note.setFolder(note.getFolder() + "/");
+			}
+			
+			FileMetadata filemetadata = client.files().uploadBuilder(note.getFolder()  + note.getTitle() +".json")
 				.withMode(WriteMode.OVERWRITE)
 				.withAutorename(false)
 				.withMute(true)
@@ -142,12 +154,19 @@ public class NotesResource {
 	@Produces("application/json")
 	public GetTemporaryLinkResult getDetails(@Auth User user, Note note) {
 	
-		logger.info("Request [/details] for user [" + user.getName() + "]" + "[" + note.getTitle() + "]");
+		logger.info("Request [/details] for user [" + user.getName() + "]" + "[" + note.getFolder() + "]" + "[" + note.getTitle() + "]");
 		DbxClientV2 client = new DbxClientV2(requestConfig, user.getAccessToken());
 		
 		try {
+			
+			if(note.getFolder().equalsIgnoreCase("/")) {
+				note.setFolder("");
+			}
 		
-			return client.files().getTemporaryLink("/" + note.getTitle() + ".json");
+			if(!note.getFolder().endsWith("/")) {
+				note.setFolder(note.getFolder() + "/");
+			}
+			return client.files().getTemporaryLink(note.getFolder()  + note.getTitle() +".json");
 			
 		} catch (DbxException e) {
 			logger.error("Exception in fetching list." + e.getMessage() + "-" + e.getMessage());

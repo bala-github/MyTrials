@@ -74,7 +74,7 @@
         `
               jQuery.each(data['entries'], function() {
               	console.log('Before decoding:' + this['name']);
-              	console.log('After decoding:' + Base64.decode(this['name'].replace('.json', '')));
+              	console.log('After decoding:' + this['name'].replace('.json', ''));
               	 htmlContent= htmlContent + `
      	 
         <div id="note`+ i +`_row" class="row note_row">
@@ -83,7 +83,7 @@
                <tr> 
                <td style="vertical-align: top;"> <span class="glyphicon glyphicon-triangle-right notemarker" id="note`+ i +`"></span></td>
                <td style="vertical-align: top;"><span class="` + (this['name'].contains('.json') ? file : folder ) + `" notetype id="note` + i + `_type"></span></td>
-               <td><label id="note`+ i + `_label" style="white-space:normal !important;">&nbsp;`+ Base64.decode(this['name'].replace('.json', ''))   + `</label></td>
+               <td><label id="note`+ i + `_label" style="white-space:normal !important;">&nbsp;`+ this['name'].replace('.json', '')   + `</label></td>
                </tr>
              </table>  
             </div>
@@ -146,14 +146,15 @@
             
         } else {
           //user is fetching details
-          console.log('Fetching details[' + $("#" + this.id + "_label").text() + ']-' + Base64.encodeURI($("#" + this.id + "_label").text().trim()));
+          console.log('Fetching details[' + $("#" + this.id + "_label").text() + ']-' + $("#" + this.id + "_label").text().trim());
           $("#" + this.id +"_loading").toggle();
           $("#" + this.id +"_error").hide();
           
           if($("#"+this.id+"_type").hasClass("glyphicon glyphicon-file")) { 
 			  var payload = { };
 	          payload = {
-	              title : Base64.encodeURI($("#" + this.id + "_label").text().trim()), 
+	              folder : $('#note_directory').text(),
+	              title : $("#" + this.id + "_label").text().trim(), 
 	            };
 	          
 	          var settings = {};
@@ -164,8 +165,8 @@
           } else {
           
     		  var settings = {};
-    		  settings = {'dir' : '/'+$("#" + this.id + "_label").text().trim()};
-    		  send_ajax_get('/list?path=/'+Base64.encodeURI($("#" + this.id + "_label").text().trim()), settings, handle_get_list_notes_success, handle_get_list_notes_error);  			
+    		  settings = {'dir' : $('#note_directory').text()  + $("#" + this.id + "_label").text().trim() + '/'};
+    		  send_ajax_get('/list?path='+ $('#note_directory').text()  + $("#" + this.id + "_label").text().trim() + '/', settings, handle_get_list_notes_success, handle_get_list_notes_error);  			
           }
       }  
         
@@ -236,8 +237,8 @@
    		
    		var settings = {};
     	settings = {'dir' : $('#note_directory').text()};
-    	console.log('Dir[' + $('#note_directory').text().replace('/','') + ']');    	
-    	send_ajax_get('/list?path=/'+Base64.encodeURI($('#note_directory').text().replace('/','')), settings, handle_get_list_notes_success, handle_get_list_notes_error);   	
+    	console.log('Dir[' + $('#note_directory').text() + ']');    	
+    	send_ajax_get('/list?path='+ $('#note_directory').text(), settings, handle_get_list_notes_success, handle_get_list_notes_error);   	
     	
     });
         
@@ -268,7 +269,7 @@
     	console.log('Title:' + $('#add_note_title').val());
     	console.log('Description:' + $('textarea#add_note_descripition').val());
     	console.log('isChecked:' + $('#add_note_isurl').prop('checked'));
-    	console.log('Title After Encoding:' + Base64.encodeURI($('#add_note_title').val()));
+    	console.log('Title After Encoding:' + $('#add_note_title').val());
     	$("#add_note_status").text('Uploading Note...'); 
     	$("#add_note_status").show();
     
@@ -276,7 +277,7 @@
 
         payload = {
               folder : $('#add_note_folder').val(),
-              title : Base64.encodeURI($('#add_note_title').val()), 
+              title : $('#add_note_title').val(), 
               description : $('textarea#add_note_descripition').val(),
               isurl : $('#add_note_isurl').prop('checked')
             };
