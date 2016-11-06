@@ -6,6 +6,7 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -64,10 +65,10 @@ public class NotesResource {
 	@Path("/list")
 	@GET
 	@Produces("application/json")
-	public ListFolderResult getNotes(@Auth User user) {
+	public ListFolderResult getNotes(@Auth User user, @DefaultValue("") @QueryParam("path") String path) {
 		
 		
-		logger.info("Request [/list] for user [" + user.getName() + "]");
+		logger.info("Request [/list] for user [" + user.getName() + "]" + "Path[" + path + "]");
 		
 		DbxClientV2 client = new DbxClientV2(requestConfig, user.getAccessToken());
 		
@@ -75,7 +76,7 @@ public class NotesResource {
 		try {
 	
 			
-			ListFolderResult result = client.files().listFolderBuilder("").withIncludeMediaInfo(true).start();
+			ListFolderResult result = client.files().listFolderBuilder(path).withIncludeMediaInfo(true).start();
 			logger.info("List Folder Result:" + mapper.writeValueAsString(result));
 			return result;
 			
@@ -98,7 +99,7 @@ public class NotesResource {
 		DbxClientV2 client = new DbxClientV2(requestConfig, user.getAccessToken());
 		
 		try {
-			FileMetadata filemetadata = client.files().uploadBuilder("/" + note.getTitle() +".json")
+			FileMetadata filemetadata = client.files().uploadBuilder(note.getFolder() + "/" + note.getTitle() +".json")
 				.withMode(WriteMode.OVERWRITE)
 				.withAutorename(false)
 				.withMute(true)
@@ -141,7 +142,7 @@ public class NotesResource {
 	@Produces("application/json")
 	public GetTemporaryLinkResult getDetails(@Auth User user, Note note) {
 	
-		logger.info("Request [/details] for user [" + user.getName() + "]");
+		logger.info("Request [/details] for user [" + user.getName() + "]" + "[" + note.getTitle() + "]");
 		DbxClientV2 client = new DbxClientV2(requestConfig, user.getAccessToken());
 		
 		try {

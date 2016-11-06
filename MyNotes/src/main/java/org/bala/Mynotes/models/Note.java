@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Note {
+	
+	private String folder;
 
 	private String title;
 	
@@ -35,5 +37,12 @@ public class Note {
 		this.url = url;
 	}
 
+	public String getFolder() {
+		return folder;
+	}
+
+	public void setFolder(String folder) {
+		this.folder = folder;
+	}
 
 }

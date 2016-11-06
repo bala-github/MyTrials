@@ -49,61 +49,41 @@
  		});
  	}
  	 	
-    function handle_get_details_success(data, status, xhr) {
-    	console.log(data);
-    	console.log(this.settings.index );
-        var content = JSON.parse(data);
-        console.log('url'+ content['title']);
-        $("textarea#" + this.settings.index  + "_description_text").val(content['description']);
-		$("#" + this.settings.index +"_loading").toggle();
-		$("#" + this.settings.index +"_description").show();
-		$("#" + this.settings.index  + "_action").show();
-        $("#" + this.settings.index  + "_action").focus();
-        $("#" + this.settings.index ).toggleClass("glyphicon-triangle-top");
-		$("#" + this.settings.index ).toggleClass("glyphicon-triangle-bottom");
-	}
-	
-	function handle_post_get_notes_success(data, status, xhr) {
-			 console.log("Modifed:" + this.settings.index);
-			 var settings = {};
-			 settings = {'index' : this.settings.index};
-			 send_ajax_get(data['link'],settings, handle_get_details_success, 'undefined');
-	
-	}	
-			    
-   function handle_post_get_notes_error(xhr,errorStatus,err) {
-              console.log('errorStatus:' + errorStatus);     
-              console.log('err:' + err);
-              console.log(xhr.status); 
-              $("#" + this.settings.index +"_error").text(xhr.responseText).show();
-              $("#" + this.settings.index +"_loading").toggle();
-              $("#" + this.settings.index).toggleClass("glyphicon-triangle-top");
-              $("#" + this.settings.index).toggleClass("glyphicon-triangle-bottom");
-	}
-	
-	function handle_get_list_notes_error(xhr,errorStatus,err) {
-              console.log('errorStatus:' + errorStatus);
-              console.log('err:' + err);
-              console.log(xhr.status);
-              console.log(xhr.responseText);
-              $("#view_notes_div").text(xhr.responseText);
-              $("#loading_details").hide(); 
-     }
-          
+    $(document).ready(function() {
+    	console.log("Going to fetch list of notes");
+    	$("#loading_details").show();
+    	var settings = {};
+    	settings = {'dir' : '/'};
+    	send_ajax_get('/list', settings, handle_get_list_notes_success, handle_get_list_notes_error);
+    });   
+
 	function handle_get_list_notes_success(data, status, xhr) {
              
               console.log("Data:" + data); 
               
               var htmlContent = '';
               var i=1; 
+              var file='glyphicon glyphicon-file';
+              var folder='glyphicon glyphicon-folder-close';
+              var dir=this.settings.dir;
+              htmlContent = htmlContent + `
+              <div id="note_directory" style="display:none;">`+ dir + `</div>
+              <div id="note_directory_text" style="text-align:center;">
+    			<p>You are in `+ dir +` </p>     	
+       		 </div>    
+        `
               jQuery.each(data['entries'], function() {
-              	console.log(this['name']);
-              	 htmlContent= htmlContent + `<div id="note`+ i +`_row" class="row note_row">
+              	console.log('Before decoding:' + this['name']);
+              	console.log('After decoding:' + Base64.decode(this['name'].replace('.json', '')));
+              	 htmlContent= htmlContent + `
+     	 
+        <div id="note`+ i +`_row" class="row note_row">
             <div class="col-md-10 col-xs-12">
             <table>
                <tr> 
-               <td style="vertical-align: top;">
-               <span class="glyphicon glyphicon-triangle-bottom notemarker" id="note`+ i +`"></span></td><td><label id="note`+ i + `_label" style="white-space:normal !important;">`+ Base64.decode(this['name'].replace('.json', ''))   + `</label></td>
+               <td style="vertical-align: top;"> <span class="glyphicon glyphicon-triangle-right notemarker" id="note`+ i +`"></span></td>
+               <td style="vertical-align: top;"><span class="` + (this['name'].contains('.json') ? file : folder ) + `" notetype id="note` + i + `_type"></span></td>
+               <td><label id="note`+ i + `_label" style="white-space:normal !important;">&nbsp;`+ Base64.decode(this['name'].replace('.json', ''))   + `</label></td>
                </tr>
              </table>  
             </div>
@@ -136,42 +116,96 @@
               $("#view_notes_div").html(htmlContent);
               $("#loading_details").hide(); 
      }
-			
-    $(document).on('click','.notemarker',function(){
+     
+      
+	function handle_get_list_notes_error(xhr,errorStatus,err) {
+              console.log('errorStatus:' + errorStatus);
+              console.log('err:' + err);
+              console.log(xhr.status);
+              console.log(xhr.responseText);
+              $("#view_notes_div").text(xhr.responseText);
+              $("#loading_details").hide(); 
+     }
+                    	 	
+ 
+	
+   $(document).on('click','.notemarker',function(){
  
  
  
 		console.log('file name');
 		console.log($("#" + this.id + "_label").text());
 		
-		if($("#" + this.id).hasClass("glyphicon-triangle-top")) {
+		if($("#" + this.id).hasClass("glyphicon-triangle-bottom")) {
 			// user is hiding details.
 			$("#" + this.id +"_description").hide();
         	$("#" + this.id + "_action").hide();
         	$("#" + this.id +"_error").hide();
-            $("#" + this.id).toggleClass("glyphicon-triangle-top");
             $("#" + this.id).toggleClass("glyphicon-triangle-bottom");
+            $("#" + this.id).toggleClass("glyphicon-triangle-right");
             
         } else {
           //user is fetching details
-          console.log('Fetching details');
+          console.log('Fetching details[' + $("#" + this.id + "_label").text() + ']-' + Base64.encodeURI($("#" + this.id + "_label").text().trim()));
           $("#" + this.id +"_loading").toggle();
           $("#" + this.id +"_error").hide();
-           
-		  var payload = { };
-          payload = {
-              title : Base64.encodeURI($("#" + this.id + "_label").text()), 
-            };
           
-          var settings = {};
+          if($("#"+this.id+"_type").hasClass("glyphicon glyphicon-file")) { 
+			  var payload = { };
+	          payload = {
+	              title : Base64.encodeURI($("#" + this.id + "_label").text().trim()), 
+	            };
+	          
+	          var settings = {};
+	          
+	          settings = {'index' : this.id};
+	          
+	          send_ajax_post('/details', 'application/json',  JSON.stringify(payload), settings, handle_post_get_notes_success, handle_post_get_notes_error);
+          } else {
           
-          settings = {'index' : this.id};
-          
-          send_ajax_post('/details', 'application/json',  JSON.stringify(payload), settings, handle_post_get_notes_success, handle_post_get_notes_error);
-          
+    		  var settings = {};
+    		  settings = {'dir' : '/'+$("#" + this.id + "_label").text().trim()};
+    		  send_ajax_get('/list?path=/'+Base64.encodeURI($("#" + this.id + "_label").text().trim()), settings, handle_get_list_notes_success, handle_get_list_notes_error);  			
+          }
       }  
         
     });    
+    
+    	
+	function handle_post_get_notes_success(data, status, xhr) {
+			 console.log("Modifed:" + this.settings.index);
+			 var settings = {};
+			 settings = {'index' : this.settings.index};
+			 send_ajax_get(data['link'],settings, handle_get_details_success, 'undefined');
+	
+	}	
+			    
+   function handle_post_get_notes_error(xhr,errorStatus,err) {
+              console.log('errorStatus:' + errorStatus);     
+              console.log('err:' + err);
+              console.log(xhr.status); 
+              $("#" + this.settings.index +"_error").text(xhr.responseText).show();
+              $("#" + this.settings.index +"_loading").toggle();
+              $("#" + this.settings.index).toggleClass("glyphicon-triangle-bottom");
+              $("#" + this.settings.index).toggleClass("glyphicon-triangle-right");
+	}
+	
+
+   function handle_get_details_success(data, status, xhr) {
+    	console.log(data);
+    	console.log(this.settings.index );
+        var content = JSON.parse(data);
+        console.log('url'+ content['title']);
+        $("textarea#" + this.settings.index  + "_description_text").val(content['description']);
+		$("#" + this.settings.index +"_loading").toggle();
+		$("#" + this.settings.index +"_description").show();
+		$("#" + this.settings.index  + "_action").show();
+        $("#" + this.settings.index  + "_action").focus();
+        $("#" + this.settings.index ).toggleClass("glyphicon-triangle-bottom");
+		$("#" + this.settings.index ).toggleClass("glyphicon-triangle-right");
+	}
+			
+ 
 
     $(document).on('click', '#welcome_link', function() {
     	$(".jumbotron").show();
@@ -199,7 +233,11 @@
     	$(".navbar-collapse").collapse('hide'); 
     	
     	$("#loading_details").show();
-    	send_ajax_get('/list', 'undefined', handle_get_list_notes_success, handle_get_list_notes_error);   	
+   		
+   		var settings = {};
+    	settings = {'dir' : $('#note_directory').text()};
+    	console.log('Dir[' + $('#note_directory').text().replace('/','') + ']');    	
+    	send_ajax_get('/list?path=/'+Base64.encodeURI($('#note_directory').text().replace('/','')), settings, handle_get_list_notes_success, handle_get_list_notes_error);   	
     	
     });
         
@@ -207,7 +245,9 @@
     	$(".jumbotron").hide();
     	$("#view_notes_form").hide();
     	$("#add_note_form").show();   
-    	clear_add_notes_screen(); 	
+    	
+    	clear_add_notes_screen();
+    	$('#add_note_folder').val($('#note_directory').text()); 	
     	$("#welcome").removeClass('active');
     	$("#add_notes").addClass('active');
     	$("#view_notes").removeClass('active'); 
@@ -215,30 +255,27 @@
     	$(".navbar-collapse").collapse('hide');    	
     });
     
-    $(document).ready(function() {
-    	console.log("Going to fetch list of notes");
-    	$("#loading_details").show();
-    	send_ajax_get('/list', 'undefined', handle_get_list_notes_success, handle_get_list_notes_error);
-    });   
-    
+
     function clear_add_notes_screen() {
     	$('textarea#add_note_descripition').val('');
     	$('#add_note_title').val('');
     	$('#add_note_isurl').prop('checked', false);
     }
-    $(document).on('click', '#remove_note_button', clear_add_notes_screen());
+    $(document).on('click', '#cancel_note_button', clear_add_notes_screen());
     
     $(document).on('click', '#add_note_button', function() {
     	console.log('Add note button clicked');
     	console.log('Title:' + $('#add_note_title').val());
     	console.log('Description:' + $('textarea#add_note_descripition').val());
     	console.log('isChecked:' + $('#add_note_isurl').prop('checked'));
+    	console.log('Title After Encoding:' + Base64.encodeURI($('#add_note_title').val()));
     	$("#add_note_status").text('Uploading Note...'); 
     	$("#add_note_status").show();
     
         var payload = { };
 
         payload = {
+              folder : $('#add_note_folder').val(),
               title : Base64.encodeURI($('#add_note_title').val()), 
               description : $('textarea#add_note_descripition').val(),
               isurl : $('#add_note_isurl').prop('checked')
@@ -330,6 +367,18 @@
         
         <div class="row" >
             <div class="col-xs-12">
+               <label style="white-space:normal !important;">Folder</label></td>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8 col-sm-12">
+                <input id="add_note_folder" type="text" class="form-control">
+            </div>
+        </div>
+                
+        <div class="row" >
+            <div class="col-xs-12">
                <label style="white-space:normal !important;">Title</label></td>
             </div>
         </div>
@@ -363,7 +412,7 @@
                  <button id="add_note_button" class="btn btn-primary" type="button">Save</button>
             </div>
             <div class="col-sm-1 col-sm-offset-0  col-xs-offset-1 col-xs-2" >
-             <button id="remove_note_button" class="btn btn-primary" type="button">Cancel</button>
+             <button id="cancel_note_button" class="btn btn-primary" type="button">Cancel</button>
             </div>
         </div> 
 
