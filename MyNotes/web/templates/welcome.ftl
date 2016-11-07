@@ -66,10 +66,35 @@
               var file='glyphicon glyphicon-file';
               var folder='glyphicon glyphicon-folder-close';
               var dir=this.settings.dir;
+              
+              console.log('Current dir[' + dir + ']');
+              
+              
+              
+              var link = '<a href="#" class="dirlink" id="/">/</a>';
+              var currentdir='/';
+              
+              if(dir != '/') {
+              
+              	  var dirs = dir.split("/");
+              	  
+                  console.log('Length:' + dirs.length);
+                  
+	              for(i = 0; i < dirs.length; i++) {
+	              
+	                 if(dirs[i] == '')
+	                   continue;
+	                   
+	                 currentdir = currentdir + dirs[i] + '/';
+	                 
+	              	 link = link + `&nbsp;<a href="#" class="dirlink" id="` + currentdir + `">`+ dirs[i] +`/</a>`;
+	              }
+              }
+              
               htmlContent = htmlContent + `
               <div id="note_directory" style="display:none;">`+ dir + `</div>
               <div id="note_directory_text" style="text-align:center;">
-    			<p>You are in `+ dir +` </p>     	
+    			<p>You are in `+ link +` </p>     	
        		 </div>    
         `
               jQuery.each(data['entries'], function() {
@@ -127,7 +152,14 @@
               $("#loading_details").hide(); 
      }
                     	 	
- 
+ 	$(document).on('click','.dirlink',function(){
+ 		var settings = {};
+    	settings = {'dir' : this.id};
+    	$("#loading_details").show();
+    	send_ajax_get('/list?path='+ this.id, settings, handle_get_list_notes_success, handle_get_list_notes_error);  			
+	 });
+	 
+	 
 	
    $(document).on('click','.notemarker',function(){
  
