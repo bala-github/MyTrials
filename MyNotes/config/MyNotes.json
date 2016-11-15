@@ -2,6 +2,16 @@
    "server" : {
    #"rootPath": "/api/",
     "applicationConnectors" : [
+    
+       {
+        "type" : "https",
+        "port" : "443",
+        "keyStorePath" : "/opt/mynotes/etc/keystore",
+        "keyStorePassword" : "password",
+        "trustStorePath" : "/opt/mynotes/etc/truststore",
+        "trustStorePassword" : "password",
+        "needClientAuth" : false    		
+        },
         {
           "type" : "http",
           "port" : "80"

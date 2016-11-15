@@ -1,0 +1,59 @@
+-- Getting Access code
+
+Use the following url in browser.
+
+https://www.dropbox.com/oauth2/authorize?response_type=code&client_id=1qg4oqlortls1ho
+
+This will give access code.
+
+-- Exchange the access code obtained above for a token.
+
+In response you would get access token.
+
+curl -ks -XPOST https://api.dropboxapi.com/oauth2/token --data "client_id=1qg4oqlortls1ho&client_secret=k9acjjdagvgf5qi&code=KbYxPViXQkAAAAAAAAAATjO4OdlZ_P5Jk1dA9uXeWbw&grant_type=authorization_code"
+
+{"access_token": "KbYxPViXQkAAAAAAAAAATzcqGkco7XaOW1D9UqfmH7kC7x26SgQ6u4zEj4zBaHPT", "token_type": "bearer", "uid": "611961793", "account_id": "dbid:AAD49dM2oWC7RV45GtOk7IiDs04kXbKoIug"}
+
+curl -ks -XPOST https://api.dropboxapi.com/oauth2/token --data "client_id=1qg4oqlortls1ho&client_secret=k9acjjdagvgf5qi&code=KbYxPViXQkAAAAAAAAAAUAp9FwK1ZS7Pcqg8z_CljP4&grant_type=authorization_code"
+{"access_token": "KbYxPViXQkAAAAAAAAAAUUNxAH6F-hq-bKYQt1tfJ8y4OQZb-Q7CUoXnv6hk-Fit", "token_type": "bearer", "uid": "611961793", "account_id": "dbid:AAD49dM2oWC7RV45GtOk7IiDs04kXbKoIug"}
+
+--Use the access token to for accessing other api's/
+
+curl -X POST https://api.dropboxapi.com/2/users/get_account \
+    --header "Authorization: Bearer KbYxPViXQkAAAAAAAAAATzcqGkco7XaOW1D9UqfmH7kC7x26SgQ6u4zEj4zBaHPT" \
+    --header "Content-Type: application/json" \
+    --data "{\"account_id\": \"dbid:AAD49dM2oWC7RV45GtOk7IiDs04kXbKoIug\"}"
+
+    
+{"account_id": "dbid:AAD49dM2oWC7RV45GtOk7IiDs04kXbKoIug", "name": {"given_name": "Balakrishnan", "surname": "Rajkumar", "familiar_name": "Balakrishnan", "display_name": "Balakrishnan Rajkumar", "abbreviated_name": "BR"}, "email": "rbala1985@gmail.com", "email_verified": true, "disabled": false, "is_teammate": true}
+
+
+curl -X POST https://api.dropboxapi.com/2/users/get_account \
+    --header "Authorization: Bearer KbYxPViXQkAAAAAAAAAAUUNxAH6F-hq-bKYQt1tfJ8y4OQZb-Q7CUoXnv6hk-Fit" \
+    --header "Content-Type: application/json" \
+    --data "{\"account_id\": \"dbid:AAD49dM2oWC7RV45GtOk7IiDs04kXbKoIug\"}"
+    
+    
+    
+https://developer.chrome.com/extensions/xhr
+
+
+Requesting cross-origin permissions
+------------------------------------
+By adding hosts or host match patterns (or both) to the permissions section of the manifest file, the extension can request access to remote servers outside of its origin.
+
+Interaction with Content Security Policy
+-----------------------------------------
+
+If you modify the default Content Security Policy for apps or extensions by adding a content_security_policy attribute to your manifest,
+you'll need to ensure that any hosts to which you'd like to connect are allowed. While the default policy doesn't restrict connections to hosts,
+be careful when explicitly adding either the connect-src or default-src directives.    
+
+
+
+Difference between $(document).on('click', '#id', function(){}); and $('#id').on('click', function(){});
+
+
+The first code says "when the document is clicked, if it's something with the ID of #id then trigger this code". The second one says "when anything that currently exists with
+the ID of #id is clicked, trigger this code". The first one is for assigning the event to elements that don't exist at that time, but will do in the future. 
+The second one will not fire for any elements added late

@@ -49,11 +49,12 @@ public class LoginHandler {
 		this.requestConfig = requestConfig;
 	}
 
-	public Response handleLoginWithOauthCode(String code) {
+	public Response handleLoginWithOauthCode(String code, String redirectURI) {
 		
 		try {
+						
 			//Get Access Token.
-			OauthResponse oauthtoken = getAccessToken(code);
+			OauthResponse oauthtoken = getAccessToken(code, redirectURI);
 			
 			//Get user details
 			BasicAccount  userDetails = getUserDetails(oauthtoken);
@@ -63,11 +64,11 @@ public class LoginHandler {
 			user.setName(userDetails.getName().getDisplayName());
 			user.setAccessToken(oauthtoken.getAccess_token());
 			user.setAccount_id(oauthtoken.getAccount_id());
-			
+
 			//Frame and set session cookie
 			return Response.temporaryRedirect(UriBuilder.fromResource(NotesResource.class).build())
 					.cookie(new NewCookie(new Cookie(MyNotesConstant.SESSION_ID_HEADER, 
-							SessionUtils.getSessionToken(user), "/", ".localhost"), "Session", 10000, false)).build();
+							SessionUtils.getSessionToken(user), "/", ".mynotes.io"), "Session", 315360000, false)).build();
 			
 		} catch (IOException | IllegalArgumentException | UriBuilderException | NoSuchAlgorithmException | DbxException e) {
 			
@@ -79,13 +80,30 @@ public class LoginHandler {
 		
 	}
 	
-	private OauthResponse getAccessToken(String code) throws ClientProtocolException, IOException {
+	public User getUserDetails(String code) throws ClientProtocolException, IOException, GetAccountErrorException, IllegalArgumentException, UriBuilderException, DbxException {
+
+		//Get Access Token.
+		OauthResponse oauthtoken = getAccessToken(code, "");
+		
+		//Get user details
+		BasicAccount  userDetails = getUserDetails(oauthtoken);
+		
+		User user = new User();
+		
+		user.setName(userDetails.getName().getDisplayName());
+		user.setAccessToken(oauthtoken.getAccess_token());
+		user.setAccount_id(oauthtoken.getAccount_id());
+				
+		return user;
+		
+	}
+	private OauthResponse getAccessToken(String code, String redirectURI) throws ClientProtocolException, IOException {
 		
 		
 		HttpResponse response = Request.Post("https://api.dropboxapi.com/oauth2/token")
 		.addHeader("Accept", "application/json")
 		.bodyForm(new BasicNameValuePair("client_id", MyNotesConstant.clientId), new BasicNameValuePair("client_secret", MyNotesConstant.clientSecret),
-				new BasicNameValuePair("code", code), new BasicNameValuePair("grant_type", "authorization_code"), new BasicNameValuePair("redirect_uri", "http://localhost/login"))
+				new BasicNameValuePair("code", code), new BasicNameValuePair("grant_type", "authorization_code"), new BasicNameValuePair("redirect_uri", redirectURI))
 		.execute().returnResponse();
 		
 						
@@ -100,6 +118,7 @@ public class LoginHandler {
 		return oauthtoken;
 		
 	}
+	
 	
 	private BasicAccount getUserDetails(OauthResponse oauthtoken) throws ClientProtocolException, IllegalArgumentException, UriBuilderException, IOException, GetAccountErrorException, DbxException {
 		

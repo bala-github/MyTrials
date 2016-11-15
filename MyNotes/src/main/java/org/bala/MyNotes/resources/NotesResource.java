@@ -180,9 +180,45 @@ public class NotesResource {
 	@Path("/login")
 	public javax.ws.rs.core.Response login(@QueryParam("code") String code) {
 		
-		return loginHandler.handleLoginWithOauthCode(code);
+		return loginHandler.handleLoginWithOauthCode(code, "https://mynotes.io/login");
 	}
 
+	@GET
+	@Path("/user")
+	@Produces("application/json")
+	public User getUserDetails(@Auth User user) {
+		logger.info("Request [/user] for user [" + user.getName() + "]");
+		
+		try {
+			
+			return user;
+		} catch(Exception e) {
+			
+			logger.error("Exception in fetching list." + e.getMessage() + "-" + e.getMessage());
+			e.printStackTrace();
+			throw new MyNotesException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR_500);
+		}
+		
+	}
+	
+	@GET
+	@Path("/access_token")
+	@Produces("application/json")
+	public User getUserDetails(@QueryParam("code") String code) {
+		logger.info("Request [/user] for user [" + code + "]");
+		
+		try {
+			
+			return loginHandler.getUserDetails(code);
+		} catch(Exception e) {
+			
+			logger.error("Exception in fetching list." + e.getMessage() + "-" + e.getMessage());
+			e.printStackTrace();
+			throw new MyNotesException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR_500);
+		}
+		
+	}	
+	
 	@GET
 	@Produces(MediaType.TEXT_HTML)
 	public UserView welcome(@Auth User user) {

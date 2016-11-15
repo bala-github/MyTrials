@@ -3,9 +3,9 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
   <script src="scripts/base64.js"></script>
   <script>
  
@@ -107,7 +107,7 @@
             <table>
                <tr> 
                <td style="vertical-align: top;"> <span class="glyphicon glyphicon-triangle-right notemarker" id="note`+ i +`"></span></td>
-               <td style="vertical-align: top;"><span class="` + (this['name'].contains('.json') ? file : folder ) + `" notetype id="note` + i + `_type"></span></td>
+               <td style="vertical-align: top;"><span class="` + (this['name'].includes('.json') ? file : folder ) + `" notetype id="note` + i + `_type"></span></td>
                <td><label id="note`+ i + `_label" style="white-space:normal !important;">&nbsp;`+ this['name'].replace('.json', '')   + `</label></td>
                </tr>
              </table>  

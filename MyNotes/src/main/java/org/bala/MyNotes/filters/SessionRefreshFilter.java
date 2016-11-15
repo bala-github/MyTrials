@@ -48,7 +48,7 @@ public class SessionRefreshFilter implements ContainerResponseFilter {
 				 */
 				
 				responseContext.getHeaders().add("Set-Cookie", new NewCookie(new Cookie(MyNotesConstant.SESSION_ID_HEADER, 
-						SessionUtils.getSessionToken(user), "/", ".localhost"), "Session", requestContext.getUriInfo().getPath().equalsIgnoreCase("signout") ? 1 : 10000, new Date(1), false, false).toString());
+						SessionUtils.getSessionToken(user), "/", ".mynotes.io"), "Session", requestContext.getUriInfo().getPath().equalsIgnoreCase("signout") ? 1 : 315360000, new Date(1), false, false).toString());
 					
 				
 			} catch (NoSuchAlgorithmException e) {
