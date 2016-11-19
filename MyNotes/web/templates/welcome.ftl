@@ -101,7 +101,7 @@
               	console.log('Before decoding:' + this['name']);
               	console.log('After decoding:' + this['name'].replace('.json', ''));
               	 htmlContent= htmlContent + `
-     	 
+     	<div id="note`+ i + `_section"> 
         <div id="note`+ i +`_row" class="row note_row">
             <div class="col-md-10 col-xs-12">
             <table>
@@ -116,6 +116,11 @@
 		<div class="row" id="note`+ i + `_loading" style ="display:none;">
 			Loading...
 		</div>
+		
+		<div class="row" id="note`+ i + `_deleting" style ="display:none;">
+			Deleting...
+		</div>
+		
 		 <div class="row" id="note`+ i + `_error" style ="display:none;">
 			
 		</div>
@@ -132,8 +137,9 @@
             </div>
 
             <div class="col-sm-offset-0 col-sm-2 col-xs-offset-0 col-xs-4" >
-             <button class="btn btn-primary" type="button">Remove</button>
+             <button class="btn btn-primary remove_button" type="button" id="note` + i + `_remove">Remove</button>
             </div>
+        </div>
         </div>
               	`;
               	i=i+1;
@@ -159,13 +165,43 @@
     	send_ajax_get('/list?path='+ this.id, settings, handle_get_list_notes_success, handle_get_list_notes_error);  			
 	 });
 	 
-	 
+   $(document).on('click', '.remove_button', function() {
+   		var note_id= this.id.replace('_remove','');
+   		
+   		console.log('Deleting note' + $('#note_directory').text() + '- ' + $("#"+note_id+"_label").text().trim());
+   		$("#" + note_id +"_deleting").show();
+   		$("#" + note_id +"_error").hide();
+   		
+   		var payload = {};
+   		payload = {
+   			folder : $('#note_directory').text(),
+   			title : $("#"+note_id+"_label").text().trim()
+   		};
+   		
+   		var settings = {};
+	          
+	    settings = {'index' : note_id};
+	    
+   		send_ajax_post('/remove', 'application/json',  JSON.stringify(payload), settings, handle_post_remove_notes_success, handle_post_remove_notes_error);
+   		
+   }); 
 	
+    function handle_post_remove_notes_success(data, status, xhr) {
+		console.log('note id' + this.settings.index);	 
+		$("#" + this.settings.index + "_deleting").hide();
+		$("#" + this.settings.index + "_section").hide();
+		
+	}	
+			    
+   function handle_post_remove_notes_error(xhr,errorStatus,err) {
+              console.log('errorStatus:' + errorStatus);     
+              console.log('err:' + err);
+              console.log(xhr.status); 
+              $("#" + this.settings.index +"_error").text(xhr.responseText).show();
+              $("#" + this.settings.index +"_deleting").hide();
+	}	
    $(document).on('click','.notemarker',function(){
- 
- 
- 
-		console.log('file name');
+ 		console.log('file name');
 		console.log($("#" + this.id + "_label").text());
 		
 		if($("#" + this.id).hasClass("glyphicon-triangle-bottom")) {
@@ -319,13 +355,13 @@
      
     function handle_add_note_success(data, status, xhr) {
 			$("#add_note_status").text('Added Note...');
-			 console.log('Status:' + status);
-			 clear_add_notes_screen();
+			console.log('Status:' + status);
+			clear_add_notes_screen();
 	}
 	
 	function handle_add_note_error(data, status, xhr) {
 			$("#add_note_status").text('Added Note...');
-			 console.log('Status:' + status);
+			console.log('Status:' + status);
 	}
 	
    /*  

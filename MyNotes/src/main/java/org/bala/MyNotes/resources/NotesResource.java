@@ -137,7 +137,15 @@ public class NotesResource {
 		
 		try {
 		
-			client.files().delete("/" + note.getTitle() + ".json");
+			if(note.getFolder().equalsIgnoreCase("/")) {
+				note.setFolder("");
+			}
+		
+			if(!note.getFolder().endsWith("/")) {
+				note.setFolder(note.getFolder() + "/");
+			}
+			
+			client.files().delete(note.getFolder()  + note.getTitle() +".json");
 			
 			return Response.ok().build();
 			
@@ -204,12 +212,12 @@ public class NotesResource {
 	@GET
 	@Path("/access_token")
 	@Produces("application/json")
-	public User getUserDetails(@QueryParam("code") String code) {
+	public Response getUserDetails(@QueryParam("code") String code) {
 		logger.info("Request [/user] for user [" + code + "]");
 		
 		try {
 			
-			return loginHandler.getUserDetails(code);
+			return loginHandler.handleLoginWithOauthCode(code, "");
 		} catch(Exception e) {
 			
 			logger.error("Exception in fetching list." + e.getMessage() + "-" + e.getMessage());

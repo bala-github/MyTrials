@@ -100,11 +100,20 @@ public class LoginHandler {
 	private OauthResponse getAccessToken(String code, String redirectURI) throws ClientProtocolException, IOException {
 		
 		
-		HttpResponse response = Request.Post("https://api.dropboxapi.com/oauth2/token")
-		.addHeader("Accept", "application/json")
-		.bodyForm(new BasicNameValuePair("client_id", MyNotesConstant.clientId), new BasicNameValuePair("client_secret", MyNotesConstant.clientSecret),
-				new BasicNameValuePair("code", code), new BasicNameValuePair("grant_type", "authorization_code"), new BasicNameValuePair("redirect_uri", redirectURI))
-		.execute().returnResponse();
+		Request request =  Request.Post("https://api.dropboxapi.com/oauth2/token")
+		.addHeader("Accept", "application/json");
+		
+		if(redirectURI != null && !redirectURI.isEmpty()) {
+			request = request.bodyForm(new BasicNameValuePair("client_id", MyNotesConstant.clientId), new BasicNameValuePair("client_secret", MyNotesConstant.clientSecret),
+				new BasicNameValuePair("code", code), new BasicNameValuePair("grant_type", "authorization_code"), new BasicNameValuePair("redirect_uri", redirectURI));
+		}
+		else {
+			request = request.bodyForm(new BasicNameValuePair("client_id", MyNotesConstant.clientId), new BasicNameValuePair("client_secret", MyNotesConstant.clientSecret),
+					new BasicNameValuePair("code", code), new BasicNameValuePair("grant_type", "authorization_code"));
+		}
+		
+		
+		HttpResponse response = request.execute().returnResponse();
 		
 						
 		OauthResponse oauthtoken =  null;
