@@ -70,7 +70,8 @@
               console.log('Current dir[' + dir + ']');
               
               
-              
+              $("#loading_details").hide();
+               
               var link = '<a href="#" class="dirlink" id="/">/</a>';
               var currentdir='/';
               
@@ -113,8 +114,13 @@
              </table>  
             </div>
         </div>
+		
 		<div class="row" id="note`+ i + `_loading" style ="display:none;">
 			Loading...
+		</div>
+		
+		<div class="row" id="note`+ i + `_updating" style = "display:none;">
+			Updating...
 		</div>
 		
 		<div class="row" id="note`+ i + `_deleting" style ="display:none;">
@@ -130,10 +136,16 @@
             </div>
         </div>
 
+        <div class="row" id="note`+ i + `_isurl_row" style="display:none;">
+             
+            <div class="checkbox col-sm-offset-0 col-sm-2 col-xs-offset-0 col-xs-4" ><label><input id="note`+ i + `_isurl" type="checkbox">URL</label> </div>
+
+        </div>
+
         <div class="row" id="note`+ i +`_action" style="display:none;">
              </br>
             <div class="col-sm-offset-0 col-sm-2 col-xs-offset-0 col-xs-4" >
-             <button class="btn btn-primary" type="button">Update</button>
+             <button class="btn btn-primary update_button" type="button" id="note` + i + `_update">Update</button>
             </div>
 
             <div class="col-sm-offset-0 col-sm-2 col-xs-offset-0 col-xs-4" >
@@ -144,8 +156,9 @@
               	`;
               	i=i+1;
               });  
+              $("#loading_details").hide();
               $("#view_notes_div").html(htmlContent);
-              $("#loading_details").hide(); 
+              
      }
      
       
@@ -164,6 +177,46 @@
     	$("#loading_details").show();
     	send_ajax_get('/list?path='+ this.id, settings, handle_get_list_notes_success, handle_get_list_notes_error);  			
 	 });
+
+
+	 $(document).on('click', '.update_button', function() {
+   		var note_id= this.id.replace('_update','');
+   		
+   		console.log('Update note' + $('#note_directory').text() + '- ' + $("#"+note_id+"_label").text().trim());
+   		$("#" + note_id +"_updating").show();
+   		$("#" + note_id +"_error").hide();
+   		
+   		var payload = {};
+   		payload = {
+   			folder : $('#note_directory').text(),
+   			title : $("#"+note_id+"_label").text().trim(),
+   			description : $("textarea#"+ note_id +"_description_text").val(),
+   			url : $("#"+ note_id +"_isurl").prop('checked')
+   		};
+   		
+   		var settings = {};
+	          
+	    settings = {'index' : note_id};
+	    
+   		send_ajax_post('/add', 'application/json',  JSON.stringify(payload), settings, handle_post_update_notes_success, handle_post_update_notes_error);
+   		
+   	}); 
+
+    function handle_post_update_notes_success(data, status, xhr) {
+		console.log('note id' + this.settings.index);	 
+		$("#" + this.settings.index + "_updating").hide();
+		
+		
+	}	
+			    
+   function handle_post_update_notes_error(xhr,errorStatus,err) {
+              console.log('errorStatus:' + errorStatus);     
+              console.log('err:' + err);
+              console.log(xhr.status); 
+              $("#" + this.settings.index +"_error").text(xhr.responseText).show();
+              $("#" + this.settings.index +"_updating").hide();
+	}	
+	 
 	 
    $(document).on('click', '.remove_button', function() {
    		var note_id= this.id.replace('_remove','');
@@ -207,6 +260,7 @@
 		if($("#" + this.id).hasClass("glyphicon-triangle-bottom")) {
 			// user is hiding details.
 			$("#" + this.id +"_description").hide();
+			$("#" + this.id +"_isurl_row").hide();
         	$("#" + this.id + "_action").hide();
         	$("#" + this.id +"_error").hide();
             $("#" + this.id).toggleClass("glyphicon-triangle-bottom");
@@ -265,7 +319,10 @@
     	console.log(this.settings.index );
         var content = JSON.parse(data);
         console.log('url'+ content['title']);
+        console.log('isURL' + content['url']);
         $("textarea#" + this.settings.index  + "_description_text").val(content['description']);
+        $("#" + this.settings.index +"_isurl_row").show();
+        $("#" + this.settings.index +"_isurl").prop('checked', content['url']);
 		$("#" + this.settings.index +"_loading").toggle();
 		$("#" + this.settings.index +"_description").show();
 		$("#" + this.settings.index  + "_action").show();
@@ -287,7 +344,9 @@
     	$(".navbar-collapse").collapse('hide'); 	
     	
     	$("#loading_details").show();
-    	send_ajax_get('/list', 'undefined', handle_get_list_notes_success, handle_get_list_notes_error);
+    	var settings = {};
+    	settings = {'dir' : '/'};
+    	send_ajax_get('/list', settings, handle_get_list_notes_success, handle_get_list_notes_error);
     });
 
     

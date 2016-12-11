@@ -96,7 +96,7 @@ public class NotesResource {
 	@Produces("application/json")
 	public FileMetadata addNote(@Auth User user, Note note) {
 	
-		logger.info("Request [/add] for user [" + user.getName() + "]");
+		logger.info("Request [/add] for user [" + user.getName() + "]" + "Folder[" + note.getFolder() + "]" + "Title[" + note.getTitle() + "]");
 		
 		DbxClientV2 client = new DbxClientV2(requestConfig, user.getAccessToken());
 		
@@ -132,7 +132,8 @@ public class NotesResource {
 	@Produces("application/json")
 	public Response removeNote(@Auth User user, Note note) {
 	
-		logger.info("Request [/remove] for user [" + user.getName() + "]");
+		logger.info("Request [/add] for user [" + user.getName() + "]" + "Folder[" + note.getFolder() + "]" + "Title[" + note.getTitle() + "]");
+		
 		DbxClientV2 client = new DbxClientV2(requestConfig, user.getAccessToken());
 		
 		try {
