@@ -7,57 +7,21 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
   <script src="scripts/base64.js"></script>
+  <script src="scripts/MyNotes.js"></script>
   <script>
  
- 	function send_ajax_get(url, settings, successHandler, errorHandler) {
- 	
- 		if(typeof settings == 'undefined') {
- 			settings = {};
- 		} 
- 		
- 		if(typeof errorHandler == 'undefined') {
- 			errorHandler = function (xhr,errorStatus,err) {};
- 		} 
- 		
- 		$.ajax({
- 			type : 'GET',
- 			url : url,
- 			settings : settings,
- 			success : successHandler,
- 			error : errorHandler
- 		});
- 	}
- 	
- 	function send_ajax_post(url, contentType, data, settings,  successHandler, errorHandler) {
- 	
- 		if(typeof settings == 'undefined') {
- 			settings = {};
- 		} 
- 		
- 		if(typeof errorHandler == 'undefined') {
- 			errorHandler = function (xhr,errorStatus,err) {};
- 		} 
- 		
- 		$.ajax({
- 			type : 'POST',
- 			url : url,
- 			contentType : contentType,
- 			data : data,
- 			settings : settings,
- 			success : successHandler,
- 			error : errorHandler
- 		});
- 	}
- 	 	
+  
+ 	var myNotes = myNotes || new MyNotesFunc();
+ 		 	
     $(document).ready(function() {
     	console.log("Going to fetch list of notes");
     	$("#loading_details").show();
     	var settings = {};
     	settings = {'dir' : '/'};
-    	send_ajax_get('/list', settings, handle_get_list_notes_success, handle_get_list_notes_error);
+    	myNotes.getNotes('', settings, handle_list_notes_success, handle_list_notes_error);
     });   
 
-	function handle_get_list_notes_success(data, status, xhr) {
+	function handle_list_notes_success(data, status, xhr) {
              
               console.log("Data:" + data); 
               
@@ -162,7 +126,7 @@
      }
      
       
-	function handle_get_list_notes_error(xhr,errorStatus,err) {
+	function handle_list_notes_error(xhr,errorStatus,err) {
               console.log('errorStatus:' + errorStatus);
               console.log('err:' + err);
               console.log(xhr.status);
@@ -175,7 +139,7 @@
  		var settings = {};
     	settings = {'dir' : this.id};
     	$("#loading_details").show();
-    	send_ajax_get('/list?path='+ this.id, settings, handle_get_list_notes_success, handle_get_list_notes_error);  			
+    	myNotes.getNotes(this.id, settings, handle_list_notes_success, handle_list_notes_error);  			
 	 });
 
 
@@ -186,30 +150,25 @@
    		$("#" + note_id +"_updating").show();
    		$("#" + note_id +"_error").hide();
    		
-   		var payload = {};
-   		payload = {
-   			folder : $('#note_directory').text(),
-   			title : $("#"+note_id+"_label").text().trim(),
-   			description : $("textarea#"+ note_id +"_description_text").val(),
-   			url : $("#"+ note_id +"_isurl").prop('checked')
-   		};
-   		
+   		var note = new myNotes.Note($('#note_directory').text(), $("#"+note_id+"_label").text().trim(), 
+   		$("textarea#"+ note_id +"_description_text").val(), $("#"+ note_id +"_isurl").prop('checked'));
+
    		var settings = {};
 	          
 	    settings = {'index' : note_id};
 	    
-   		send_ajax_post('/add', 'application/json',  JSON.stringify(payload), settings, handle_post_update_notes_success, handle_post_update_notes_error);
+   		note.add(settings, handle_update_notes_success, handle_update_notes_error);
    		
    	}); 
 
-    function handle_post_update_notes_success(data, status, xhr) {
+    function handle_update_notes_success(data, status, xhr) {
 		console.log('note id' + this.settings.index);	 
 		$("#" + this.settings.index + "_updating").hide();
 		
 		
 	}	
 			    
-   function handle_post_update_notes_error(xhr,errorStatus,err) {
+   function handle_update_notes_error(xhr,errorStatus,err) {
               console.log('errorStatus:' + errorStatus);     
               console.log('err:' + err);
               console.log(xhr.status); 
@@ -225,34 +184,31 @@
    		$("#" + note_id +"_deleting").show();
    		$("#" + note_id +"_error").hide();
    		
-   		var payload = {};
-   		payload = {
-   			folder : $('#note_directory').text(),
-   			title : $("#"+note_id+"_label").text().trim()
-   		};
-   		
+   		var note = new myNotes.Note($('#note_directory').text(), $("#"+note_id+"_label").text().trim());
+
    		var settings = {};
 	          
 	    settings = {'index' : note_id};
-	    
-   		send_ajax_post('/remove', 'application/json',  JSON.stringify(payload), settings, handle_post_remove_notes_success, handle_post_remove_notes_error);
+	     		
+   		note.remove(settings, handle_remove_notes_success, handle_remove_notes_error);
    		
    }); 
 	
-    function handle_post_remove_notes_success(data, status, xhr) {
+    function handle_remove_notes_success(data, status, xhr) {
 		console.log('note id' + this.settings.index);	 
 		$("#" + this.settings.index + "_deleting").hide();
 		$("#" + this.settings.index + "_section").hide();
 		
 	}	
 			    
-   function handle_post_remove_notes_error(xhr,errorStatus,err) {
+   function handle_remove_notes_error(xhr,errorStatus,err) {
               console.log('errorStatus:' + errorStatus);     
               console.log('err:' + err);
               console.log(xhr.status); 
               $("#" + this.settings.index +"_error").text(xhr.responseText).show();
               $("#" + this.settings.index +"_deleting").hide();
 	}	
+	
    $(document).on('click','.notemarker',function(){
  		console.log('file name');
 		console.log($("#" + this.id + "_label").text());
@@ -272,38 +228,29 @@
           $("#" + this.id +"_loading").toggle();
           $("#" + this.id +"_error").hide();
           
-          if($("#"+this.id+"_type").hasClass("glyphicon glyphicon-file")) { 
-			  var payload = { };
-	          payload = {
-	              folder : $('#note_directory').text(),
-	              title : $("#" + this.id + "_label").text().trim(), 
-	            };
-	          
+          if($("#"+this.id+"_type").hasClass("glyphicon glyphicon-file")) {
+          
+          	  var note = new myNotes.Note($('#note_directory').text(), $("#" + this.id + "_label").text().trim());
+          	 
 	          var settings = {};
 	          
 	          settings = {'index' : this.id};
 	          
-	          send_ajax_post('/details', 'application/json',  JSON.stringify(payload), settings, handle_post_get_notes_success, handle_post_get_notes_error);
+
+	          note.view(settings, handle_get_details_success, handle_get_details_error);
           } else {
           
     		  var settings = {};
     		  settings = {'dir' : $('#note_directory').text()  + $("#" + this.id + "_label").text().trim() + '/'};
-    		  send_ajax_get('/list?path='+ $('#note_directory').text()  + $("#" + this.id + "_label").text().trim() + '/', settings, handle_get_list_notes_success, handle_get_list_notes_error);  			
+    		  myNotes.getNotes($('#note_directory').text()  + $("#" + this.id + "_label").text().trim() + '/', settings, handle_list_notes_success, handle_list_notes_error);  			
           }
       }  
         
     });    
     
     	
-	function handle_post_get_notes_success(data, status, xhr) {
-			 console.log("Modifed:" + this.settings.index);
-			 var settings = {};
-			 settings = {'index' : this.settings.index};
-			 send_ajax_get(data['link'],settings, handle_get_details_success, 'undefined');
-	
-	}	
-			    
-   function handle_post_get_notes_error(xhr,errorStatus,err) {
+		    
+   function handle_get_details_error(xhr,errorStatus,err) {
               console.log('errorStatus:' + errorStatus);     
               console.log('err:' + err);
               console.log(xhr.status); 
@@ -346,7 +293,7 @@
     	$("#loading_details").show();
     	var settings = {};
     	settings = {'dir' : '/'};
-    	send_ajax_get('/list', settings, handle_get_list_notes_success, handle_get_list_notes_error);
+    	myNotes.getNotes('', settings, handle_list_notes_success, handle_list_notes_error);
     });
 
     
@@ -365,7 +312,7 @@
    		var settings = {};
     	settings = {'dir' : $('#note_directory').text()};
     	console.log('Dir[' + $('#note_directory').text() + ']');    	
-    	send_ajax_get('/list?path='+ $('#note_directory').text(), settings, handle_get_list_notes_success, handle_get_list_notes_error);   	
+    	myNotes.getNotes($('#note_directory').text(), settings, handle_list_notes_success, handle_list_notes_error);   	
     	
     });
         
@@ -399,17 +346,11 @@
     	console.log('Title After Encoding:' + $('#add_note_title').val());
     	$("#add_note_status").text('Uploading Note...'); 
     	$("#add_note_status").show();
-    
-        var payload = { };
-
-        payload = {
-              folder : $('#add_note_folder').val(),
-              title : $('#add_note_title').val(), 
-              description : $('textarea#add_note_descripition').val(),
-              isurl : $('#add_note_isurl').prop('checked')
-            };
-
-		send_ajax_post('/add', 'application/json', JSON.stringify(payload), 'undefined', handle_add_note_success, handle_add_note_error);
+        console.log('isurl' +  $('#add_note_isurl').prop('checked'));
+    	var note = new myNotes.Note($('#add_note_folder').val(), $('#add_note_title').val(), $('textarea#add_note_descripition').val(), $('#add_note_isurl').prop('checked'));
+    	
+    	note.add('undefined', handle_add_note_success, handle_add_note_error);
+    			
     });
      
     function handle_add_note_success(data, status, xhr) {
