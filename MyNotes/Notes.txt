@@ -33,9 +33,20 @@ curl -X POST https://api.dropboxapi.com/2/users/get_account \
     --header "Content-Type: application/json" \
     --data "{\"account_id\": \"dbid:AAD49dM2oWC7RV45GtOk7IiDs04kXbKoIug\"}"
     
-    
+
+curl -X POST https://api.dropboxapi.com/2/files/list_folder \
+	--header "Authorization: Bearer KbYxPViXQkAAAAAAAAAAUUNxAH6F-hq-bKYQt1tfJ8y4OQZb-Q7CUoXnv6hk-Fit" \
+	--header "Content-Type: application/json" \
+	--data "{\"path\": \"/\",\"recursive\": true,\"include_media_info\": false,\"include_deleted\": false,\"include_has_explicit_shared_members\": false}"    
     
 https://developer.chrome.com/extensions/xhr
+
+
+curl -X POST https://api.dropboxapi.com/2/files/delete \
+    --header "Authorization: Bearer KbYxPViXQkAAAAAAAAAATzcqGkco7XaOW1D9UqfmH7kC7x26SgQ6u4zEj4zBaHPT" \
+    --header "Content-Type: application/json" \
+    --data "{\"path\": \"/bookmarks/Bookmarks bar/office\"}"
+
 
 
 Requesting cross-origin permissions
@@ -57,3 +68,202 @@ Difference between $(document).on('click', '#id', function(){}); and $('#id').on
 The first code says "when the document is clicked, if it's something with the ID of #id then trigger this code". The second one says "when anything that currently exists with
 the ID of #id is clicked, trigger this code". The first one is for assigning the event to elements that don't exist at that time, but will do in the future. 
 The second one will not fire for any elements added late
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+JavaScript Notes
+---------------
+///////////////////
+var MyNotes = MyNotes || {
+ 
+  get : function () {
+     console.log("Get called");
+  },
+  
+  post : function () {
+     console.log("Post Called"); 
+  },
+  
+  list : function() {
+      this.get();
+  },
+  
+  Note : function(title, url) {
+    this.title = title;
+    this.url = url;
+  }
+
+};
+
+MyNotes.Note.prototype.add = function () {
+  console.log(this.title + '-' + this.url);
+  MyNotes.get();
+};
+
+MyNotes.list();
+
+var note = new MyNotes.Note('Test', 'Test2');
+
+console.log('Adding ' + note.title);
+note.add();
+
+///////////////////////
+
+/////////////////////Using Private Methods/////////////////////
+
+var MyNotesFunc =  (function () {
+ 
+  function get () {
+     console.log("Get called" + this.url);
+  }
+  
+  function post () {
+     console.log("Post Called"); 
+  }
+  
+  function MyNotes() {
+    this.url = 'http://mynotes'
+  }
+  
+  MyNotes.prototype.list = function() {
+      console.log(this.url)
+      get.call(this);
+  };
+  
+  MyNotes.prototype.Note = function(title, url) {
+    this.title = title;
+    this.url = url;
+  };
+
+  MyNotes.prototype.Note.prototype.add = function () {
+    console.log(this.title + '-' + this.url);
+    get.call(this);
+  };
+
+  return MyNotes;
+})();
+
+
+var MyNotes = MyNotes || new MyNotesFunc();
+
+MyNotes.get() ; //This will give error. We cannot access get
+MyNotes.list();
+
+var note = new MyNotes.Note('Test', 'Test2');
+
+console.log('Adding ' + note.title);
+note.add();
+
+Reference:http://stackoverflow.com/questions/55611/javascript-private-methods
+//////////////////////////////
+Reference https://developer.mozilla.org/en-US/docs/Web/JavaScript/Closures
+
+var MyNotesFunc =  (function () {
+ 
+  function get () {
+     console.log("Get called" + this.url);
+  }
+  
+  function post () {
+     console.log("Post Called"); 
+  }
+  
+  function MyNotes() {
+    this.url = 'http://mynotes'
+  }
+  
+  (function () {
+
+	  this.list = function() {
+	      console.log(this.url)
+	      get.call(this);
+	  };
+	  
+	  this.Note = function(title, url) {
+	    this.title = title;
+	    this.url = url;
+	  };
+	
+	  this.Note.prototype.add = function () {
+	    console.log(this.title + '-' + this.url);
+	    get.call(this);
+	  };
+  
+  }).call(MyNotes.prototype);
+
+  return MyNotes;
+})();
+
+
+var MyNotes = MyNotes || new MyNotesFunc();
+
+MyNotes.get() ; //This will give error. We cannot access get
+MyNotes.list();
+
+var note = new MyNotes.Note('Test', 'Test2');
+
+console.log('Adding ' + note.title);
+note.add();
+
+///////////////////////////////////////////////////////////////////////
+https://developer.mozilla.org/en-US/docs/Web/JavaScript/Inheritance_and_the_prototype_chain
+function Graph() {
+  this.vertices = [];
+  this.edges = [];
+  this.x = 1;
+}
+
+Graph.prototype = {
+  addVertex: function(v){
+    this.vertices.push(v);
+  },
+  counter1 : 1,
+  x : 2
+};
+
+var g = new Graph();
+
+console.log(g.hasOwnProperty('vertices')); //true
+console.log(g.hasOwnProperty('edges')); //true
+
+console.log(g.hasOwnProperty('addVertex')); //false
+console.log(g.hasOwnProperty('counter1')); //false
+
+console.log(g.counter1); //1
+
+Graph.prototype.counter2 = 2;
+
+console.log(g.counter2); //2
+
+
+console.log(g.hasOwnProperty('x')); //true
+console.log(g.x); //1 Not 2. This is called shadowing.
+
+console.log(g.hasOwnProperty('y')); //false
+console.log(g.y); //undefined
+/////////////////////////////////////////////////////////////////////////////////////
+
+
+curl -X GET https://graph.microsoft.com/v1.0/me/messages \
+	--header "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJub25jZSI6IkFRQUJBQUFBQUFEUk5ZUlEzZGhSU3JtLTRLLWFkcENKcWtPZHdxWVhxNmxTN3EyTjRKakd1VFdiMThMT2FfV1FDVmQ1b1pIczN5UFFZNkFHY2FBeWZaRVFRQzdFelFmRjhiQkhHMmVib3F6OHpZSW1oaThXWVNBQSIsImFsZyI6IlJTMjU2IiwieDV0IjoiUnJRcXU5cnlkQlZSV21jb2N1WFViMjBIR1JNIiwia2lkIjoiUnJRcXU5cnlkQlZSV21jb2N1WFViMjBIR1JNIn0.eyJhdWQiOiJodHRwczovL2dyYXBoLm1pY3Jvc29mdC5jb20iLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC82MTM4NjIzZS1jNzZjLTRjZTgtYjk5MS05NDFkZGQzNTQwNmYvIiwiaWF0IjoxNDgyMzk2MzY4LCJuYmYiOjE0ODIzOTYzNjgsImV4cCI6MTQ4MjQwMDI2OCwiYWNyIjoiMSIsImFtciI6WyJwd2QiXSwiYXBwX2Rpc3BsYXluYW1lIjoidGVzdCIsImFwcGlkIjoiODYxNGY4NjktNWJlZS00YzEyLTkxYjYtNDc3YzFkYTYyNDhiIiwiYXBwaWRhY3IiOiIxIiwiZmFtaWx5X25hbWUiOiJwcmFidSIsImdpdmVuX25hbWUiOiJ2ZW5rYXRlc2giLCJpcGFkZHIiOiIxOTkuODUuMTI1LjUiLCJuYW1lIjoidmVua2F0ZXNoIHByYWJ1Iiwib2lkIjoiOTE2ZGUwMjQtNzRjNS00ZGY1LThhYjctOGYxOWM2ZWUzYmFkIiwicGxhdGYiOiIzIiwicHVpZCI6IjEwMDM3RkZFOUQxOEE2REMiLCJzY3AiOiJNYWlsLlJlYWRXcml0ZSBVc2VyLlJlYWRXcml0ZSIsInN1YiI6IlNtVXFWWkN4TXRFaVJFUXRZS3VxSDl3SXdqMnM0Rmp1bkx3ZHdnVXFIZ3MiLCJ0aWQiOiI2MTM4NjIzZS1jNzZjLTRjZTgtYjk5MS05NDFkZGQzNTQwNmYiLCJ1bmlxdWVfbmFtZSI6InZwcmFidUBxbGFiei5vbm1pY3Jvc29mdC5jb20iLCJ1cG4iOiJ2cHJhYnVAcWxhYnoub25taWNyb3NvZnQuY29tIiwidmVyIjoiMS4wIn0.FoqsgtmY3tXWj_Z-NnaQoWaglKIRxlOiObDk4fC76Re7Em7iF3SLf8ZxFp_zdaFl_qWdbJn7tYqDG4uUsCeUdWEXfRTjlkNdQSmauL_K3wnbOi9CKAX6V0Xi0Jbx-3rd16jVrb8zY60GRQMc1muMsAMC-C1dcqxApx0I5IOhH_07IBCPyV9OrY1qm-LDIFxrFZI1a9gKu7dE8R3A7gc5_uxephJALj-le4dt3q1wm335lRk_QPWcOTwvBU_aXACQtjAqyaVg5tZWBjj-9VJx4rPK4lHxVY-00WUN0m4FquSZnz80-d_TkCIBGYPnyAZHBI0XR8PV6I548ejPgGEHwQ" \
+	--header "Content-Type: application/json" \
+	 
+
+	 
+	 
+curl -X GET https://graph.microsoft.com/v1.0/me/messages \
+	--header "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJub25jZSI6IkFRQUJBQUFBQUFEUk5ZUlEzZGhSU3JtLTRLLWFkcENKcFUzMS1IWUJfcGZVWTl6eHRCVjhCS1h4V3FhTW9NVWRkTzBQY0h0M3dDcmZoLWN2bFRQeUc2Yk9SODdyelpZY1YtYzl6cHQxQ1d5bG1MaTJfQzFYVXlBQSIsImFsZyI6IlJTMjU2IiwieDV0IjoiUnJRcXU5cnlkQlZSV21jb2N1WFViMjBIR1JNIiwia2lkIjoiUnJRcXU5cnlkQlZSV21jb2N1WFViMjBIR1JNIn0.eyJhdWQiOiJodHRwczovL2dyYXBoLm1pY3Jvc29mdC5jb20iLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC82MTM4NjIzZS1jNzZjLTRjZTgtYjk5MS05NDFkZGQzNTQwNmYvIiwiaWF0IjoxNDgyMzk3Njk1LCJuYmYiOjE0ODIzOTc2OTUsImV4cCI6MTQ4MjQwMTU5NSwiYXBwX2Rpc3BsYXluYW1lIjoidGVzdCIsImFwcGlkIjoiODYxNGY4NjktNWJlZS00YzEyLTkxYjYtNDc3YzFkYTYyNDhiIiwiYXBwaWRhY3IiOiIxIiwiaWRwIjoiaHR0cHM6Ly9zdHMud2luZG93cy5uZXQvNjEzODYyM2UtYzc2Yy00Y2U4LWI5OTEtOTQxZGRkMzU0MDZmLyIsIm9pZCI6ImQ0MmY1ZGJjLWU0NDgtNGYzOC05MDFiLTJiZmUwYTdjOGY0ZiIsInJvbGVzIjpbIk1haWwuUmVhZFdyaXRlIiwiRGlyZWN0b3J5LlJlYWQuQWxsIiwiVXNlci5SZWFkLkFsbCJdLCJzdWIiOiJkNDJmNWRiYy1lNDQ4LTRmMzgtOTAxYi0yYmZlMGE3YzhmNGYiLCJ0aWQiOiI2MTM4NjIzZS1jNzZjLTRjZTgtYjk5MS05NDFkZGQzNTQwNmYiLCJ2ZXIiOiIxLjAifQ.erBSomfcP0KdFXTV8mouf4v0U6Y2L-drvBTX_tM9UKyg8Ub5nBIOSVlgvyI4nXT_5ytHiDIMEbvqyE4qWmSwCM-XUz0Cw58vUPo8QMV7E2klFchYMejgeB-XMQqXkYIF1lEVFGP_Oiy7BpL5eDuFfd9Ho6S8SrS5Rcvejn8COUTzl8b7KqEtLXBikl28ltX-TWMqgTu0vcdJdWvgl1mKUDfnAySi4CYXyb7pxCrvglL-6pjfaEtgIxeoacIPwzYbyGofWdQHDD6-pzddkq2iF0CW3p_7YU6c5s5yGabPLrEtgRigC4Zw8VJFSJNNbPkXYDSrpTxOXDtvq7y8j2LJGg" \
+	--header "Content-Type: application/json" \
+	 

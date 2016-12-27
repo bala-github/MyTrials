@@ -3,7 +3,10 @@ package org.bala.MyNotes.resources;
 import io.dropwizard.auth.Auth;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -16,6 +19,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.http.entity.ContentType;
 import org.bala.MyNotes.Utils.Utils;
 import org.bala.MyNotes.configuration.MyNotesConfiguration;
 import org.bala.MyNotes.configuration.MyNotesConstant;
@@ -57,15 +61,43 @@ public class NotesResource {
 	
 	public NotesResource(MyNotesConfiguration configuration) {
 		
-		requestConfig = new DbxRequestConfig("MyScrapBook/v1");
+		requestConfig = new DbxRequestConfig("MyScrapBook/v2");
 		appInfo = new DbxAppInfo(MyNotesConstant.clientId, MyNotesConstant.clientSecret);
 		loginHandler = new LoginHandler(appInfo, requestConfig);
 	}
 	
+	private String getPath(Note note) {
+		String path;
+		
+		if(note.getFolder().equalsIgnoreCase("/")) {
+			note.setFolder("");
+		}
+
+		if(note.getTitle() != null && note.getTitle().length() > 0) {
+			if(!note.getFolder().endsWith("/")) {
+				note.setFolder(note.getFolder() + "/");
+			}
+			
+			path = note.getFolder()  + note.getTitle() +".json";
+
+		} else {
+											
+			path = note.getFolder();
+
+			if(note.getFolder().endsWith("/")) {
+				note.setFolder(note.getFolder().substring(0, note.getFolder().length()-1));
+			}
+
+		}
+		
+		return path;
+	}
+	
+	
 	@Path("/list")
 	@GET
 	@Produces("application/json")
-	public ListFolderResult getNotes(@Auth User user, @DefaultValue("") @QueryParam("path") String path) {
+	public ListFolderResult getNotes(@Auth User user, @DefaultValue("") @QueryParam("path") String path, @DefaultValue("false") @QueryParam("recursive") boolean recursive) {
 		
 		
 		logger.info("Request [/list] for user [" + user.getName() + "]" + "Path[" + path + "]");
@@ -78,7 +110,8 @@ public class NotesResource {
 			if(path.equalsIgnoreCase("/")) {
 				path = ""; 
 			}
-			ListFolderResult result = client.files().listFolderBuilder(path).withIncludeMediaInfo(true).start();
+			ListFolderResult result = client.files().listFolderBuilder(path)
+					.withIncludeMediaInfo(true).withRecursive(recursive).start();
 			logger.info("List Folder Result:" + mapper.writeValueAsString(result));
 			return result;
 			
@@ -103,15 +136,12 @@ public class NotesResource {
 		
 		try {
 			
-			if(note.getFolder().equalsIgnoreCase("/")) {
-				note.setFolder("");
-			}
 			
-			if(!note.getFolder().endsWith("/")) {
-				note.setFolder(note.getFolder() + "/");
-			}
+			String path = getPath(note);
+				
+			logger.debug("Adding note " + path);
 			
-			FileMetadata filemetadata = client.files().uploadBuilder(note.getFolder()  + note.getTitle() +".json")
+			FileMetadata filemetadata = client.files().uploadBuilder(path)
 				.withMode(WriteMode.OVERWRITE)
 				.withAutorename(false)
 				.withMute(true)
@@ -125,6 +155,34 @@ public class NotesResource {
 			throw new MyNotesException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR_500);
 		}
 	}
+
+	@Path("/upload_batch")
+	@POST
+	@Consumes("application/json")
+	@Produces("application/json")
+	public Map<String, Integer> uploadBatch(@Auth User user, List<Note> notes) {
+		
+		Map<String, Integer> response = new HashMap<String, Integer>(2);
+		
+		int successCount = 0, failureCount = 0;
+		
+	
+		for(Note note : notes) {
+			try {
+				addNote(user, note);
+				successCount++;
+			} catch(Exception e) {
+				failureCount++;
+				
+			}
+		}
+		
+		response.put("successCount", successCount);
+		
+		response.put("failureCount", failureCount);
+		
+		return response;
+	}
 	
 	@Path("/remove")
 	@POST
@@ -132,21 +190,17 @@ public class NotesResource {
 	@Produces("application/json")
 	public Response removeNote(@Auth User user, Note note) {
 	
-		logger.info("Request [/add] for user [" + user.getName() + "]" + "Folder[" + note.getFolder() + "]" + "Title[" + note.getTitle() + "]");
+		logger.info("Request [/remove] for user [" + user.getName() + "]" + "Folder[" + note.getFolder() + "]" + "Title[" + note.getTitle() + "]");
 		
 		DbxClientV2 client = new DbxClientV2(requestConfig, user.getAccessToken());
 		
 		try {
 		
-			if(note.getFolder().equalsIgnoreCase("/")) {
-				note.setFolder("");
-			}
-		
-			if(!note.getFolder().endsWith("/")) {
-				note.setFolder(note.getFolder() + "/");
-			}
+			String path = getPath(note);
 			
-			client.files().delete(note.getFolder()  + note.getTitle() +".json");
+			logger.debug("Removing note " + path);
+			
+			client.files().delete(path);
 			
 			return Response.ok().build();
 			
@@ -160,22 +214,18 @@ public class NotesResource {
 	
 	@Path("/details")
 	@POST
-	@Produces("application/json")
-	public GetTemporaryLinkResult getDetails(@Auth User user, Note note) {
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public InputStream getDetails(@Auth User user, Note note) {
 	
 		logger.info("Request [/details] for user [" + user.getName() + "]" + "[" + note.getFolder() + "]" + "[" + note.getTitle() + "]");
 		DbxClientV2 client = new DbxClientV2(requestConfig, user.getAccessToken());
 		
 		try {
 			
-			if(note.getFolder().equalsIgnoreCase("/")) {
-				note.setFolder("");
-			}
-		
-			if(!note.getFolder().endsWith("/")) {
-				note.setFolder(note.getFolder() + "/");
-			}
-			return client.files().getTemporaryLink(note.getFolder()  + note.getTitle() +".json");
+			String path = getPath(note);
+			
+			return client.files().download(path).getInputStream();
+			
 			
 		} catch (DbxException e) {
 			logger.error("Exception in fetching list." + e.getMessage() + "-" + e.getMessage());
@@ -183,6 +233,33 @@ public class NotesResource {
 			throw new MyNotesException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR_500);
 		}
 		
+	}
+
+	@Path("/move")
+	@POST
+	@Consumes("application/json")
+	@Produces("application/json")
+	public Metadata moveNote(@Auth User user, List<Note> note) {
+
+		DbxClientV2 client = new DbxClientV2(requestConfig, user.getAccessToken());
+		
+		try {
+			
+			
+
+			String oldPath = getPath(note.get(0));
+			String newPath = getPath(note.get(1));
+			
+			logger.info("Request [/remove] for user [" + user.getName() + "]" + "[" + oldPath + "]" + "[" + newPath + "]");
+			
+			return client.files().move(oldPath, newPath);
+			
+		} catch (DbxException e) {
+			logger.error("Exception in fetching list." + e.getMessage() + "-" + e.getMessage());
+			e.printStackTrace();
+			throw new MyNotesException(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR_500);
+		}
+
 	}
 	
 	@GET

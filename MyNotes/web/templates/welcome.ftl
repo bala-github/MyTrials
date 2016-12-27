@@ -18,7 +18,7 @@
     	$("#loading_details").show();
     	var settings = {};
     	settings = {'dir' : '/'};
-    	myNotes.getNotes('', settings, handle_list_notes_success, handle_list_notes_error);
+    	myNotes.getNotes('', false, settings, handle_list_notes_success, handle_list_notes_error);
     });   
 
 	function handle_list_notes_success(data, status, xhr) {
@@ -139,7 +139,7 @@
  		var settings = {};
     	settings = {'dir' : this.id};
     	$("#loading_details").show();
-    	myNotes.getNotes(this.id, settings, handle_list_notes_success, handle_list_notes_error);  			
+    	myNotes.getNotes(this.id, false, settings, handle_list_notes_success, handle_list_notes_error);  			
 	 });
 
 
@@ -242,7 +242,7 @@
           
     		  var settings = {};
     		  settings = {'dir' : $('#note_directory').text()  + $("#" + this.id + "_label").text().trim() + '/'};
-    		  myNotes.getNotes($('#note_directory').text()  + $("#" + this.id + "_label").text().trim() + '/', settings, handle_list_notes_success, handle_list_notes_error);  			
+    		  myNotes.getNotes($('#note_directory').text()  + $("#" + this.id + "_label").text().trim() + '/', false, settings, handle_list_notes_success, handle_list_notes_error);  			
           }
       }  
         
@@ -277,7 +277,7 @@
         $("#" + this.settings.index ).toggleClass("glyphicon-triangle-bottom");
 		$("#" + this.settings.index ).toggleClass("glyphicon-triangle-right");
 	}
-			
+				
  
 
     $(document).on('click', '#welcome_link', function() {
@@ -293,7 +293,7 @@
     	$("#loading_details").show();
     	var settings = {};
     	settings = {'dir' : '/'};
-    	myNotes.getNotes('', settings, handle_list_notes_success, handle_list_notes_error);
+    	myNotes.getNotes('', false, settings, handle_list_notes_success, handle_list_notes_error);
     });
 
     
@@ -312,7 +312,7 @@
    		var settings = {};
     	settings = {'dir' : $('#note_directory').text()};
     	console.log('Dir[' + $('#note_directory').text() + ']');    	
-    	myNotes.getNotes($('#note_directory').text(), settings, handle_list_notes_success, handle_list_notes_error);   	
+    	myNotes.getNotes($('#note_directory').text(), false, settings, handle_list_notes_success, handle_list_notes_error);   	
     	
     });
         
@@ -349,7 +349,7 @@
         console.log('isurl' +  $('#add_note_isurl').prop('checked'));
     	var note = new myNotes.Note($('#add_note_folder').val(), $('#add_note_title').val(), $('textarea#add_note_descripition').val(), $('#add_note_isurl').prop('checked'));
     	
-    	note.add('undefined', handle_add_note_success, handle_add_note_error);
+    	note.add(undefined, handle_add_note_success, handle_add_note_error);
     			
     });
      

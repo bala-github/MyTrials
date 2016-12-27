@@ -1,6 +1,6 @@
 {
   "name": "My Bookmarks",
-  "version": "2.9",
+  "version": "3.3",
   "description": "A browser action with a popup dump of all bookmarks, including search, add, edit and delete.",
   "permissions": [
     "bookmarks",
