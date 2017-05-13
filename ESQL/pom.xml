@@ -5,4 +5,16 @@
   <version>0.0.1-SNAPSHOT</version>
   <name>ESQL</name>
   <description>A SQL like interface to Elastic Search.</description>
+  <dependencies>
+  	<dependency>
+  		<groupId>org.slf4j</groupId>
+  		<artifactId>slf4j-api</artifactId>
+  		<version>1.7.24</version>
+  	</dependency>
+  	<dependency>
+  		<groupId>org.slf4j</groupId>
+  		<artifactId>slf4j-simple</artifactId>
+  		<version>1.7.12</version>
+  	</dependency>
+  </dependencies>
 </project>

@@ -7,11 +7,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-public class ESQuerySyntax {
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+public class ESQuerySyntax {
+	
+	final static Logger logger = LoggerFactory.getLogger(ESQuerySyntax.class);
+	
 	private Edge startingEdge;
-	
-	
+		
 	private Stack<Token> condTokens;
 
     private Stack<Token> logicalTokens;
@@ -21,13 +25,13 @@ public class ESQuerySyntax {
     private Stack<Token> sortTokens;
     
     private List<Token> groupTokens;
+    
+    private List<Token> aggTokens;
 	
 	private StringBuilder query;
 	
 	private TokenType queryType;
-	
-	private boolean useFilters = false;
-	
+			
 	private boolean hasContainsOperator = false;
 	
 	private void init() {
@@ -38,6 +42,7 @@ public class ESQuerySyntax {
         filters = new Stack<String>();
         sortTokens = new Stack<Token>();
         groupTokens = new ArrayList<Token>();
+        aggTokens = new ArrayList<Token>();
 		query = new StringBuilder();
 		queryType = null;
 	}
@@ -70,7 +75,13 @@ public class ESQuerySyntax {
 		Edge directionEdge = new Edge(TokenType.DIRECTION);
 		Edge groupEdge = new Edge(TokenType.GROUP);
 		
+		Edge sumEdge = new Edge(TokenType.SUM);
+		Edge avgEdge = new Edge(TokenType.AVG);
+		
 		selectEdge.addNeighbour(fieldEdge);
+		selectEdge.addNeighbour(sumEdge);
+		selectEdge.addNeighbour(avgEdge);
+		
 		updateEdge.addNeighbour(tableNameEdge);
 		descEdge.addNeighbour(tableNameEdge);
 		
@@ -80,6 +91,16 @@ public class ESQuerySyntax {
 				 new ListOfFilter(Arrays.asList(new Filter[] {new NotContainsFilter(TokenType.WHERE), new ContainsFilter(TokenType.SELECT)})),
 				 new ContainsFilter(TokenType.GROUP)
 		})));
+		fieldEdge.addNeighbour(sumEdge, new NotContainsFilter(TokenType.WHERE));
+		fieldEdge.addNeighbour(avgEdge, new NotContainsFilter(TokenType.WHERE));
+		
+		sumEdge.addNeighbour(groupOpenEdge);
+		
+
+		avgEdge.addNeighbour(groupOpenEdge);
+		
+
+		
 		
 		deleteEdge.addNeighbour(fromEdge);  //delete query
 		fromEdge.addNeighbour(tableNameEdge);
@@ -106,7 +127,17 @@ public class ESQuerySyntax {
 		whereEdge.addNeighbour(fieldEdge, new ContainsFilter(TokenType.WHERE));
 		
 		whereEdge.addNeighbour(groupOpenEdge);
-		groupOpenEdge.addNeighbour(fieldEdge, new ContainsFilter(TokenType.WHERE));
+		groupOpenEdge.addNeighbour(fieldEdge, new OneOfFilter(Arrays.asList(new Filter[] { new ContainsFilter(TokenType.SUM), 
+				new ContainsFilter(TokenType.AVG), new ContainsFilter(TokenType.WHERE)})));
+		
+		
+		fieldEdge.addNeighbour(groupCloseEdge, new OneOfFilter(Arrays.asList(new Filter[] { new ContainsFilter(TokenType.SUM), 
+				new ContainsFilter(TokenType.AVG)})));
+		
+		groupCloseEdge.addNeighbour(fieldEdge, new NotContainsFilter(TokenType.WHERE));
+		groupCloseEdge.addNeighbour(sumEdge, new NotContainsFilter(TokenType.WHERE));
+		groupCloseEdge.addNeighbour(avgEdge, new NotContainsFilter(TokenType.WHERE));
+		groupCloseEdge.addNeighbour(fromEdge, new NotContainsFilter(TokenType.WHERE));
 		
 		//we don't allow two continue open brackets.
 		
@@ -178,12 +209,7 @@ public class ESQuerySyntax {
 		query = query.replaceAll(";", " ; ");
 		query = query.replaceAll("=", " = ");
 		
-		/*	
-		 * Is it needed.	
-		for(LogicalTokenTypes token : LogicalTokenTypes.values()) {
-			query = query.replaceAll(token.getText(), " " + token.getText() + " ");
-		}*/
-		
+		//Do we have to do the same for logical tokens.
 		for(ConditionalTokenTypes token : ConditionalTokenTypes.values()) {
 			query = query.replaceAll(token.getText(), " " + token.getText() + " ");
 		}
@@ -210,12 +236,12 @@ public class ESQuerySyntax {
 			StringBuilder errorMsg = new StringBuilder("Error due to one of these.\n");
 			String token  = tokens[counter++];
 			
-			//System.out.println("--------------------");	
-			//System.out.println("Token:" + token);
-			int exceptionCount = 0;
+			logger.trace("--------------------");	
+			logger.trace("Token:{}",token);
+			
 			for(Edge candidate : candidates.keySet()) {
 				
-				//System.out.println(candidate.getTokenType());
+				logger.trace("Token Tpe {} ", candidate.getTokenType());
 				
 				try {
 					
@@ -227,8 +253,7 @@ public class ESQuerySyntax {
 						//System.out.println("Candiates Count" + candidates.size());
 						break;
 					}
-				} catch (TokenValidationException e) {
-					//System.out.println(++exceptionCount);
+				} catch (TokenValidationException e) {			
 					errorMsg.append("at " + (length + counter) + " " + e.getMessage() + "\n");
 					
 				}																
@@ -237,8 +262,8 @@ public class ESQuerySyntax {
 			length = length + token.length();
 			
 			if(!validated) {
-				System.out.println("Query:" + query);
-				System.out.println("Invalid Token:[" + token + "]");
+				logger.info("Query:{}", query);
+				logger.error("Invalid Token:[{}{}" , token , "]");
 				throw new TokenValidationException(errorMsg.toString());
 			} 
 			
@@ -271,7 +296,24 @@ public class ESQuerySyntax {
 				if(token.getType() == TokenType.FIELD) {
 					fields.add(token.getData());
 					index++;
-				} else {
+				}else if(token.getType() == TokenType.SUM || token.getType() == TokenType.AVG){
+					aggTokens.add(token);
+					//ignoring '('
+					++index;
+					//get next token.
+					logger.trace("Finding field on which to aggregate");
+					Token aggfield = tokens.get(++index);
+					
+					logger.trace("{} - {}", aggfield.getData() , aggfield.getType());
+					
+					if(aggfield.getType() == TokenType.FIELD){
+						logger.trace("Adding to agg Token");
+						aggTokens.add(aggfield);
+					}
+					//ignoring ')'
+					++index;
+					index++;
+				}else {
 					break;
 				}
 			}while(true);
@@ -300,19 +342,23 @@ public class ESQuerySyntax {
 				logicalTokens.push(token);
                   
 			} else if (token.getType() == TokenType.CONDITONAL_OPEARATOR) {
-                System.out.println("Pushing Conditional Operator." + token.getData());
+                logger.debug("Pushing Conditional Operator:{}" , token.getData());
 			    condTokens.push(token);	
 			} else if(token.getType() == TokenType.VALUE) {
 				
-                System.out.println("Pushing Value Token." + token.getData());
+                logger.debug("Pushing Value Token:{}" , token.getData());
 				condTokens.push(token);
-				System.out.println("Cond Tokens Size:" + condTokens.size());
+				
+				logger.debug("Cond Tokens Size:{}" , condTokens.size());
+				
 		        String currentfilter = handleCondition(condTokens);
-                System.out.println("Current Filter:" + currentfilter);
-                System.out.println("Cond Tokens Size:" + condTokens.size());
+		        
+                logger.debug("Current Filter:{}" , currentfilter);
+                logger.debug("Cond Tokens Size:{}" + condTokens.size());
+                
 				filters.push(currentfilter);								
 			} else if(token.getType() == TokenType.FIELD && !endOfConditions){
-                System.out.println("Pushing " + token.getData());
+				logger.debug("Pushing {}" + token.getData());
 				condTokens.push(token);
 			} else if(token.getType() == TokenType.ORDER ){
 				endOfConditions = true;
@@ -359,7 +405,7 @@ public class ESQuerySyntax {
 			}
 			
 			String filter = filters.pop();
-			if(filter.startsWith("\"should\"") || filter.startsWith("\"must\"")) {
+			if(filter.startsWith("\"should\"") || filter.startsWith("\"must\"") || filter.startsWith("\"must_not\"")) {
 				query.append("\"bool\": {" + filter + "}");
 			} else {
 				query.append(filter);
@@ -378,34 +424,57 @@ public class ESQuerySyntax {
 				
 			}
 			
-			if(groupTokens.size() > 0){
+			if(groupTokens.size() > 0 ){
 				
 				for(Token field : groupTokens){
-					query.append(",\"aggs\": {");
-					query.append("\""+ field.getData() + "\": {");
+					query.append(",\"aggs\": {");							
+					query.append("\"group_"+ field.getData() + "\": {");
 					query.append("\"terms\" : { \"field\" :  \"" + field.getData() + "\"}");
-				}
-				for(int i = 0; i < groupTokens.size()*2; i++){
-					query.append("}");
+					
 				}
 				
 			}
-			query.append(", \"fields\": [");
-			
-					
-			for(int i = 0; i < fields.size() - 1; i++) {
-				query.append("\"" + fields.get(i) + "\",");
+
+			if(aggTokens.size() > 0){
+
+				query.append(",\"aggs\": {");
+				for(int i = 0; i < aggTokens.size(); i=i+2){
+					Token aggOperation = aggTokens.get(i);
+					Token aggField = aggTokens.get(i+1);
+					query.append("\"" + aggOperation.getData() + "_"+ aggField.getData() + "\": {");
+					query.append("\"" + aggOperation.getData() + "\" : { \"field\" :  \"" + aggField.getData() + "\"}");
+					query.append("},");
+				}
+				query.setCharAt(query.length()-1, '}');
+
 			}
-			query.append("\"" + fields.get(fields.size()-1) + "\"");
-			query.append("]");
+
+			for(int i = 0; i < groupTokens.size()*2; i++){
+				query.append("}");
+			}
+
+			
+			if(fields.size() == 1 && !fields.get(0).equalsIgnoreCase("*")){
+			}else{
+
+				query.append(", \"fields\": [");
+				
+				
+				for(int i = 0; i < fields.size() - 1; i++) {
+					query.append("\"" + fields.get(i) + "\",");
+				}
+				query.append("\"" + fields.get(fields.size()-1) + "\"");
+				query.append("]");
+
+			}
 			
 			query.append("}");
 			
        	}
 		
-		System.out.println(query.toString());
+		logger.trace(query.toString());
 		
-		return null;
+		return query.toString();
 	}
 	
 	private void compressGroup() {
@@ -435,8 +504,9 @@ public class ESQuerySyntax {
 		Token previousToken = null;
 		Token token = reorderedLogicalTokens.pop();
 
-	    System.out.println("Size:" + reorderedLogicalTokens.size());
-	    System.out.println("Size:" + reorderedFilters.size());
+	    logger.debug("ReOrdered Logical Tokens Size:{}" , reorderedLogicalTokens.size());
+	    logger.debug("ReOrdered Filter Size:{}" , reorderedFilters.size());
+	    
 		while(true) {
 	        count = 0; 
 			do {
@@ -474,24 +544,7 @@ public class ESQuerySyntax {
     	filters.push(reorderedFilters.pop());
 	}
 	
-	private String handleLogicalToken(Token token) {
-		
-		if(token.getType() == TokenType.LOGICAL_OPERATOR) {
-			String filter1 = filters.pop();
-			String filter2 = filters.pop();
-			if(LogicalTokenTypes.getFromString(token.getData()) ==  LogicalTokenTypes.AND) {
-				return "\"must\" : [" +  "{" + filter1 + "},{" + filter2 + "}"+ "]";
-			} else if(LogicalTokenTypes.getFromString(token.getData()) ==  LogicalTokenTypes.OR) {
-				return "\"should\" : [" +  "{" + filter1 + "},{" + filter2 + "}"+ "]";
-			}
-		} else if (token.getType() == TokenType.GROUP_OPEN) {
-			String filter = filters.pop();
-			return "\"bool\": {" + filter + "}";			
-		}
-		
-		return null;
-		
-	}
+
 	private String handleCondition(Stack<Token> condTokens) throws TokenValidationException {
 		
 		
@@ -535,21 +588,22 @@ public class ESQuerySyntax {
 		} else if (condtoken == ConditionalTokenTypes.LESS_THAN) {
             return "\"range\" :  {\"" + field + "\":{\"lt\":" + value + "}}";            
 		} else if (condtoken == ConditionalTokenTypes.NOT_EQUAL) {
-            return "\"must_not\" : {\"term\" :  {\"" + field + "\":\"" + value + "\"}}";            
-    
-		} 
-	
-        return null;	
+            return "\"must_not\" : {\"term\" :  {\"" + field + "\":\"" + value + "\"}}";
+		}else {
+			throw new TokenValidationException("Invalid token " + field + "found. Expected a conditional operatior");
+		}
+		 
+		
 	}
 	
 		
-	public static class Edge {
+	private static class Edge {
 		
 		TokenType tokenType;
 		TokenValidator tokenValidator;
 		Map<Edge, Filter> neighbours;
 		
-		public Edge(TokenType tokenType) {
+		private Edge(TokenType tokenType) {
 			
 			List<String> keyWords = new ArrayList<String>();
 			keyWords.add(";");
@@ -568,7 +622,9 @@ public class ESQuerySyntax {
 			keyWords.add("order");
 			keyWords.add("by");
 			keyWords.add("group");
-			
+			keyWords.add("sum");
+			keyWords.add("avg");
+
 			this.tokenType = tokenType;
 			this.neighbours = new HashMap<Edge, Filter>();
 			switch(tokenType) {
@@ -639,27 +695,33 @@ public class ESQuerySyntax {
 				case GROUP:
 					tokenValidator = new GroupTokenValidator();
 					break;
+				case SUM:
+					tokenValidator = new SumFieldTokenValidator();
+					break;
+				case AVG:
+					tokenValidator = new AvgFieldTokenValidator();
+					break;
 			}
 		}
 		
-		public Map<Edge, Filter> getNeighbours() {
+		private TokenType getTokenType(){
+			return tokenType;
+		}
+		private Map<Edge, Filter> getNeighbours() {
 			
 			return neighbours;
 		}
 
-		public void addNeighbour(Edge neighbour, Filter filter) {
+		private void addNeighbour(Edge neighbour, Filter filter) {
 			neighbours.put(neighbour, filter);
 		}
 		
-		public void addNeighbour(Edge neighbour) {
+		private void addNeighbour(Edge neighbour) {
 			addNeighbour(neighbour, null);
 		}		
 		
-		public TokenType getTokenType() {
-			return tokenType;
-		}
 		
-		public Token validate(String tokenData, List<Token> seenTokens) throws TokenValidationException {
+		private Token validate(String tokenData, List<Token> seenTokens) throws TokenValidationException {
 			//System.out.println("Checking " + tokenData + "against validator" + tokenType);
 			
 			return tokenValidator.validate(tokenData, seenTokens);
@@ -685,19 +747,28 @@ public class ESQuerySyntax {
 		//String query = "update ngq_email_metadata set quarantine_expire_date = 1455857954 where email_message_id == 'c48b74684b3e5f0c332b70b921d029067a75f0e5ab0b5b8e88f4f70fc29666d0';";
 		
 		//syntax.useFilters = true;
-		String query = "select first_name from employee where first_name == 'Robert' and (middle_name == 'Edward' or last_name == 'Rogers') "
-				+ "order by first_name asc, last_name desc group by department_id,college_id;";
-		//String query = "select first_name from employee where quarantine_expire_date == 123 ;";
+		//String query = "select first_name from employee where first_name == 'Robert' and (middle_name == 'Edward' or last_name == 'Rogers') "
+		//		+ "order by first_name asc, last_name desc group by department_id,college_id;";
+		
+		String query = "select user_id, master_recipient, email_size , sum (email_size) , avg (email_length) from ngq_email_metadata where customer_id != 1 order by user_id asc group by customer_id,domain_id;";
+		
+		//String query = "select * from employee where quarantine_expire_date == 'abc' ;";
 		try {
 			
 			List<Token> tokens = syntax.validateQuery(query);
-			System.out.println("Query " + query + "is valid");
+			logger.debug("Query {} is valid", query);
+		  
+			System.out.println("ElasticSearch Query:\n" + syntax.getQuery(tokens));
 			
-			System.out.println("MetaData Service Query:");  
-			syntax.getQuery(tokens);
 
 		} catch (TokenValidationException e) {
 			e.printStackTrace();
-			System.out.println("Query: " + query + "\nError: " + e.getMessage());		}
+			logger.error("Query: {} \nError: {}" , query, e.getMessage());	
+		}
 	}
 }
+
+
+
+//http://stackoverflow.com/questions/22927098/show-all-elasticsearch-aggregation-results-buckets-and-not-just-10
+

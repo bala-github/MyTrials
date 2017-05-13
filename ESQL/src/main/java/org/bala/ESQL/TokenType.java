@@ -22,5 +22,9 @@ public enum TokenType {
 	ORDER,
 	BY,
 	DIRECTION,
-	GROUP
+	ASC,
+	DSC,
+	GROUP,
+	SUM,
+	AVG
 }
