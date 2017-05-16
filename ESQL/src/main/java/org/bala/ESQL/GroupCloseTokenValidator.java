@@ -9,8 +9,8 @@ public class GroupCloseTokenValidator implements TokenValidator {
 		int openCount = 0;
 		int closeCount = 0;
 		
-		if(!tokenData.equalsIgnoreCase(")")) {
-			throw new TokenValidationException("Expected keyword ')'");
+		if(!tokenData.equalsIgnoreCase(TokenType.GROUP_CLOSE.toString())) {
+			throw new TokenValidationException("Expected keyword " + TokenType.GROUP_CLOSE);
 		}		
 		
 		for(Token token : seenTokens) {
@@ -26,7 +26,7 @@ public class GroupCloseTokenValidator implements TokenValidator {
 		
 	
 		if(closeCount > openCount) {
-			throw new TokenValidationException("UnExpected ')'");
+			throw new TokenValidationException("UnExpected " + TokenType.GROUP_CLOSE);
 		}
 		return new Token(TokenType.GROUP_CLOSE, tokenData);	
 	}

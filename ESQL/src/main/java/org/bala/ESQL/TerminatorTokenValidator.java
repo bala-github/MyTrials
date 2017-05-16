@@ -10,8 +10,8 @@ public class TerminatorTokenValidator implements TokenValidator {
 
 	public Token validate(String tokenData, List<Token> seenTokens) throws TokenValidationException {
 
-		if(!tokenData.equalsIgnoreCase(";")) {
-			throw new TokenValidationException("Expected  ';'");
+		if(!tokenData.equalsIgnoreCase(TokenType.TERMINATOR.toString())) {
+			throw new TokenValidationException("Expected  " + TokenType.TERMINATOR);
 		}		
 		
 		int openCount = 0;

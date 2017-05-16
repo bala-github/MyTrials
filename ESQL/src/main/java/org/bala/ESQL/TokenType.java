@@ -26,5 +26,18 @@ public enum TokenType {
 	DSC,
 	GROUP,
 	SUM,
-	AVG
+	AVG;
+	
+	public String toString(){
+		
+		if(name().equalsIgnoreCase(TokenType.GROUP_OPEN.name())){
+			return "(";
+		}else if(name().equalsIgnoreCase(TokenType.GROUP_CLOSE.name())){
+			return ")";
+		}else if(name().equalsIgnoreCase(TokenType.TERMINATOR.name())){
+			return ";";
+		}else{
+			return name();
+		}
+	}
 }

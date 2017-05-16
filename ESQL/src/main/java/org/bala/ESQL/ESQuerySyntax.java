@@ -112,7 +112,7 @@ public class ESQuerySyntax {
 		tableNameEdge.addNeighbour(setEdge, new ContainsFilter(TokenType.UPDATE));
 
 		//desc
-		tableNameEdge.addNeighbour(terminatorEdge, new ContainsFilter(TokenType.DESC));
+		tableNameEdge.addNeighbour(terminatorEdge, new NotContainsFilter(TokenType.UPDATE));
 	
 		//update
 		fieldEdge.addNeighbour(assignmentOperatorEdge, new ListOfFilter(Arrays.asList(new Filter[] {new NotContainsFilter(TokenType.WHERE), new ContainsFilter(TokenType.UPDATE)})));
@@ -250,7 +250,7 @@ public class ESQuerySyntax {
 						seenTokens.add(candidate.validate(token, seenTokens));
 						validated = true;					
 						candidates = candidate.getNeighbours();
-						//System.out.println("Candiates Count" + candidates.size());
+						logger.trace("Candiates Count {}", candidates.size());
 						break;
 					}
 				} catch (TokenValidationException e) {			
@@ -379,16 +379,11 @@ public class ESQuerySyntax {
 			
 		}
 
-		System.out.println(query);
+		logger.trace(query.toString());
 		if(queryType == TokenType.SELECT) {
 					
 			//NOTE: In filtered query, if no query is specified it would use match_all query by default.
-			query.append("{\"from\": 0, \"size\":" + Integer.MAX_VALUE + ",");
-			if(/*useFilters ||*/ !hasContainsOperator) {
-				query.append("\"filter\": { " );
-			} else {
-				query.append("\"query\": { ");
-			}
+			query.append("{\"from\": 0, \"size\":" + Integer.MAX_VALUE );
             /*
 			while(!logicalTokens.isEmpty() && !filters.isEmpty()) {
 				Token token = logicalTokens.pop();
@@ -400,19 +395,25 @@ public class ESQuerySyntax {
 				compressGroup();
 			}
 			
-			if(filters.size() != 1) {
-				throw new IllegalStateException("Expected filter size to be 1");
+
+			if(!filters.isEmpty()){
+				if(/*useFilters ||*/ !hasContainsOperator) {
+					query.append(",\"filter\": { " );
+				} else {
+					query.append(",\"query\": { ");
+				}
+
+				String filter = filters.pop();
+				if(filter.startsWith("\"should\"") || filter.startsWith("\"must\"") || filter.startsWith("\"must_not\"")) {
+					query.append("\"bool\": {" + filter + "}");
+				} else {
+					query.append(filter);
+				}
+				
+				query.append("}");
 			}
-			
-			String filter = filters.pop();
-			if(filter.startsWith("\"should\"") || filter.startsWith("\"must\"") || filter.startsWith("\"must_not\"")) {
-				query.append("\"bool\": {" + filter + "}");
-			} else {
-				query.append(filter);
-			}
-			
-			query.append("}");
-			
+
+			//handle sort conditions
 			if(sortTokens.size() > 0) {
 				query.append(", \"sort\":[");
 				do {
@@ -424,6 +425,7 @@ public class ESQuerySyntax {
 				
 			}
 			
+			//handle group by conditions
 			if(groupTokens.size() > 0 ){
 				
 				for(Token field : groupTokens){
@@ -434,7 +436,8 @@ public class ESQuerySyntax {
 				}
 				
 			}
-
+			
+			//handle aggregate conditions. They should be placed inside the inner most group by condition
 			if(aggTokens.size() > 0){
 
 				query.append(",\"aggs\": {");
@@ -454,18 +457,15 @@ public class ESQuerySyntax {
 			}
 
 			
-			if(fields.size() == 1 && !fields.get(0).equalsIgnoreCase("*")){
+			if(fields.size() == 1 && fields.get(0).equalsIgnoreCase("*")){
 			}else{
 
 				query.append(", \"fields\": [");
-				
-				
 				for(int i = 0; i < fields.size() - 1; i++) {
 					query.append("\"" + fields.get(i) + "\",");
 				}
 				query.append("\"" + fields.get(fields.size()-1) + "\"");
 				query.append("]");
-
 			}
 			
 			query.append("}");
@@ -602,29 +602,24 @@ public class ESQuerySyntax {
 		TokenType tokenType;
 		TokenValidator tokenValidator;
 		Map<Edge, Filter> neighbours;
+		static List<String> keyWords;
 		
-		private Edge(TokenType tokenType) {
-			
-			List<String> keyWords = new ArrayList<String>();
-			keyWords.add(";");
-			keyWords.add("select");
-			keyWords.add("from");
-			keyWords.add("where");
-			keyWords.add("==");
-			keyWords.add("(");
-			keyWords.add(")");
-			keyWords.add("and");
-			keyWords.add("or");
-			keyWords.add("=");
-			keyWords.add("set");
-			keyWords.add("desc");
-			keyWords.add("delete");
-			keyWords.add("order");
-			keyWords.add("by");
-			keyWords.add("group");
-			keyWords.add("sum");
-			keyWords.add("avg");
+		static{
+			keyWords = new ArrayList<String>();
+			for(TokenType token : TokenType.values()){
+				keyWords.add(token.toString());
+			}
+			for(LogicalTokenTypes token : LogicalTokenTypes.values()){
+				keyWords.add(token.toString());
+			}
 
+			for(ConditionalTokenTypes token : ConditionalTokenTypes.values()){
+				keyWords.add(token.toString());
+			}
+
+		}
+		
+		private Edge(TokenType tokenType) {			
 			this.tokenType = tokenType;
 			this.neighbours = new HashMap<Edge, Filter>();
 			switch(tokenType) {
@@ -639,19 +634,19 @@ public class ESQuerySyntax {
 					tokenValidator = new FieldToken(keyWords);
 					break;
 				case FROM:
-					tokenValidator = new FromTokenValidator();
+					tokenValidator = new DefaultTokenValidator(TokenType.FROM);
 					break;
 				case SELECT:
-					tokenValidator = new SelectTokenValidator();
+					tokenValidator = new DefaultTokenValidator(TokenType.SELECT);
 					break;
 				case UPDATE:
-					tokenValidator = new UpdateTokenValidator();
+					tokenValidator = new DefaultTokenValidator(TokenType.UPDATE);
 					break;
 				case DESC:
-					tokenValidator = new DescTokenValidator();
+					tokenValidator = new DefaultTokenValidator(TokenType.DESC);
 					break;
 				case DELETE:
-					tokenValidator = new DeleteTokenValidator();
+					tokenValidator = new DefaultTokenValidator(TokenType.DELETE);
 					break;
 				case TABLE_NAME:
 					tokenValidator = new TableNameTokenValidator(keyWords);
@@ -663,13 +658,13 @@ public class ESQuerySyntax {
 					tokenValidator = new ValueToken(keyWords);
 					break;
 				case WHERE:
-					tokenValidator = new WhereToken();
+					tokenValidator = new DefaultTokenValidator(TokenType.WHERE);
 					break;
 				case CONDITONAL_OPEARATOR:
 					tokenValidator = new ConditionalOperatorValidator();
 					break;
 				case GROUP_OPEN:
-					tokenValidator = new GroupOpenTokenValidator();
+					tokenValidator = new DefaultTokenValidator(TokenType.GROUP_OPEN);
 					break;
 				case GROUP_CLOSE:
 					tokenValidator = new GroupCloseTokenValidator();
@@ -678,28 +673,28 @@ public class ESQuerySyntax {
 					tokenValidator = new LogicalOperatorTokenValidator();
 					break;	
 				case ASSIGNMENT_OPERATOR:
-					tokenValidator = new AssignmentTokenValidator();
+					tokenValidator = new DefaultTokenValidator(TokenType.ASSIGNMENT_OPERATOR);
 					break;
 				case SET:
-					tokenValidator = new SetTokenValidator();
+					tokenValidator = new DefaultTokenValidator(TokenType.SET);
 					break;
 				case ORDER:
-					tokenValidator = new OrderTokenValidator();
+					tokenValidator = new DefaultTokenValidator(TokenType.ORDER);
 					break;
 				case BY:
-					tokenValidator = new ByTokenValidator();
+					tokenValidator = new DefaultTokenValidator(TokenType.BY);
 					break;
 				case DIRECTION:
 					tokenValidator = new DirectionTokenValidator();
 					break;
 				case GROUP:
-					tokenValidator = new GroupTokenValidator();
+					tokenValidator = new DefaultTokenValidator(TokenType.GROUP);
 					break;
 				case SUM:
-					tokenValidator = new SumFieldTokenValidator();
+					tokenValidator = new DefaultTokenValidator(TokenType.SUM);
 					break;
 				case AVG:
-					tokenValidator = new AvgFieldTokenValidator();
+					tokenValidator = new DefaultTokenValidator(TokenType.AVG);
 					break;
 			}
 		}
@@ -722,7 +717,7 @@ public class ESQuerySyntax {
 		
 		
 		private Token validate(String tokenData, List<Token> seenTokens) throws TokenValidationException {
-			//System.out.println("Checking " + tokenData + "against validator" + tokenType);
+			logger.debug("Checking {} against validator {}" , tokenData , tokenType);
 			
 			return tokenValidator.validate(tokenData, seenTokens);
 		}
@@ -744,22 +739,27 @@ public class ESQuerySyntax {
 		
 	
 		//String query = "select email_reference from ngq_email_metadata where email_envelope_recipient == 'user1@ngq1.com' or (subject contains 'sdf' and  quarantine_type == 'SPAM') ;";
+		
 		//String query = "update ngq_email_metadata set quarantine_expire_date = 1455857954 where email_message_id == 'c48b74684b3e5f0c332b70b921d029067a75f0e5ab0b5b8e88f4f70fc29666d0';";
 		
 		//syntax.useFilters = true;
 		//String query = "select first_name from employee where first_name == 'Robert' and (middle_name == 'Edward' or last_name == 'Rogers') "
 		//		+ "order by first_name asc, last_name desc group by department_id,college_id;";
 		
-		String query = "select user_id, master_recipient, email_size , sum (email_size) , avg (email_length) from ngq_email_metadata where customer_id != 1 order by user_id asc group by customer_id,domain_id;";
+		//String query = "select user_id, master_recipient, email_size , sum (email_size) , avg (email_size) from ngq_email_metadata where customer_id != 1 order by user_id asc group by customer_id,domain_id;";
 		
 		//String query = "select * from employee where quarantine_expire_date == 'abc' ;";
+		
+		//String query = "select user_id, master_recipient, email_size , sum (email_size) , avg (email_size) from ngq_email_metadata where user_id == 1;";
+		
+		String query = "select email_size from ngq_email_metadata where user_id == 1;";
+		
 		try {
 			
 			List<Token> tokens = syntax.validateQuery(query);
 			logger.debug("Query {} is valid", query);
 		  
-			System.out.println("ElasticSearch Query:\n" + syntax.getQuery(tokens));
-			
+			System.out.println("ElasticSearch Query:\n" + syntax.getQuery(tokens));		
 
 		} catch (TokenValidationException e) {
 			e.printStackTrace();
