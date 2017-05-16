@@ -1,0 +1,194 @@
+ <!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+	 <style>
+		[v-cloak] {
+			display: none;
+		}
+	 </style>  
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+</head>
+<body>
+<div id="app" style="display:normal;" v-cloak>
+
+	<!-- http://www.w3schools.com/bootstrap/bootstrap_case_navigation.asp -->
+	<nav class="navbar navbar-inverse">
+	  <div class="container-fluid">
+	    <div class="navbar-header">
+	      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>
+	        <span class="icon-bar"></span>                       
+	      </button>
+	      <a class="navbar-brand" @click="setCurrentLink('About')" href="#">DevTools</a>
+	    </div>
+	    <div class="collapse navbar-collapse" id="myNavbar">
+	      <ul class="nav navbar-nav">
+	        <li class="active">
+	        <a @click="setCurrentLink('About')" href="#">About</a></li>	      
+	        <li><a @click="setCurrentLink('Base64')" href="#" >Base64 Encode/Decode</a></li>
+	        <li><a @click="setCurrentLink('UrlEncode')" href="#">URL Encode/Decode</a></li>
+	        <li><a @click="setCurrentLink('ESQuery')" href="#">Convert SQL queries to ElasticSearch queries.</a></li>	        
+	      </ul>
+	    
+	    </div>
+	  </div>
+	</nav>
+	
+<!-- Bootstrap requires a containing element to wrap elements http://www.w3schools.com/bootstrap/bootstrap_get_started.asp -->
+ 
+	<div class="container-fluid">
+		<div v-if="currentLink == 'About'" id="about"> 
+			<!--A jumbotron indicates a big box for calling extra attention to some special content or information. http://www.w3schools.com/bootstrap/bootstrap_jumbotron_header.asp-->
+			<div class="jumbotron">
+			  <h1>Dev Tools</h1>
+			</div>
+			
+			<div class="row">
+				<!-- 
+				Bootstrap's grid system allows up to 12 columns across the page. http://www.w3schools.com/bootstrap/bootstrap_grid_basic.asp
+				We can give different percentage of spllits to divs in different devices
+				http://www.w3schools.com/bootstrap/bootstrap_grid_large.asp
+				-->
+				<div class="col-sm-4 col-md-4">
+					<p><button type="button" @click="setCurrentLink('Base64')" class="btn btn-info">Base64 Encode/Decode</button></p>
+					<p>Base64 encode or decode UTF-8 data.
+					</br>
+				</div>
+				
+				<div class="col-sm-4 col-md-4">
+					<p><button type="button" @click="setCurrentLink('UrlEncode')" class="btn btn-info">URL Encode/Decode</button></p>
+					<p>Encode or Decode URL's with UTF-8 characters</p>
+					</br>
+				</div>
+				
+				<div class="col-sm-4 col-md-4">
+					<p>
+					<button type="button" @click="setCurrentLink('ESQuery')" class="btn btn-info">Convert SQL query to ElasticSearch Query</button>
+					<p>Generate MIB File by specifying metrics and alerts.</p>
+					</p>
+				</div>
+			</div>
+		</div>	
+		<div v-if="currentLink == 'Base64'" id="base64">
+			<div class="row">
+				<div>
+					<div class="row">
+						<div class="col-xs-12">
+               				<label style="white-space:normal !important;">Text to be encoded/decoded</label></td>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-8 col-sm-12">
+							<textarea id="base64_data" v-model="data" class="form-control" rows="5"></textarea>
+						</div>
+					</div>
+					</br>
+			        <div class="row">
+            			<div class="col-sm-1 col-xs-2" >
+                 			<button id="base64_encode" class="btn btn-primary" type="button">Encode</button>
+            			</div>
+            			<div class="col-sm-1 col-sm-offset-0  col-xs-offset-1 col-xs-2" >
+             				<button id="base64_decode" class="btn btn-primary" type="button">Decode</button>
+            			</div>
+        			</div> 
+					
+				</div>
+			</div>
+		</div>
+
+		<div v-if="currentLink == 'UrlEncode'" id="urlencode">
+			<div class="row">
+				<div>
+					<div class="row">
+						<div class="col-xs-12">
+               				<label style="white-space:normal !important;">Text to be encoded/decoded</label></td>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-8 col-sm-12">
+							<textarea id="urlencode_data" v-model="data" class="form-control" rows="5"></textarea>
+						</div>
+					</div>
+					</br>
+			        <div class="row">
+            			<div class="col-sm-1 col-xs-2" >
+                 			<button id="urlencode_encode" class="btn btn-primary" type="button">Encode</button>
+            			</div>
+            			<div class="col-sm-1 col-sm-offset-0  col-xs-offset-1 col-xs-2" >
+             				<button id="urlencode_decode" class="btn btn-primary" type="button">Decode</button>
+            			</div>
+        			</div> 
+					
+				</div>
+			</div>
+		</div>
+
+		<div v-if="currentLink == 'ESQuery'" id="esquery">
+			<div class="row">
+				<div>
+					<div class="row">
+						<div class="col-xs-12">
+               				<label style="white-space:normal !important;">Enter the SQL query</label></td>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-md-8 col-sm-12">
+							<textarea id="esquery_data" v-model="data" class="form-control" rows="5"></textarea>
+						</div>
+					</div>
+					</br>
+			        <div class="row">
+            			<div class="col-sm-1 col-xs-2" >
+                 			<button id="esquery_convert"  @click="getESQuery" class="btn btn-primary" type="button">Convert</button>
+            			</div>
+        			</div> 
+					
+				</div>
+			</div>
+			</br>
+			<div class="row">
+				<div class="col-md-4 alert-success">
+					{{response}}
+				</div>
+			</div>
+		</div>
+		
+	</div>
+</div>	
+<!-- Hashing, Unicode lookup, Epoch convert.-->
+<script src="https://unpkg.com/vue@2.0.3/dist/vue.js"></script>
+<script src="../scripts/DevTools.js"></script>
+<script>
+	var devTools = new DevTools();
+	var app = new Vue({
+	
+		el: '#app',
+		data: {
+			currentLink: 'About',
+			data: '',
+			response: ''
+		},
+		methods: {
+			setCurrentLink: function(currentLink){
+				this.currentLink = currentLink;
+			},
+			getESQuery: function(){
+				
+				console.log('Getting ES Query');
+				var promise = devTools.getESQuery(this.data);
+				promise.then(this.setResponse);
+			},
+			setResponse: function(response) {
+				console.log(response);
+				this.response = response.response;
+			}
+		}
+	});
+</script>
+
+</body>
+</html>
