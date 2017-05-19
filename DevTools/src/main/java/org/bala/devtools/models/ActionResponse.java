@@ -7,6 +7,8 @@ public class ActionResponse {
 		FAILURE
 	}
 	
+	private int code = 200; //defaults to OK
+	
 	private Status status;
 	
 	private String response;
@@ -25,6 +27,14 @@ public class ActionResponse {
 
 	public void setResponse(String response) {
 		this.response = response;
+	}
+
+	public int getCode() {
+		return code;
+	}
+
+	public void setCode(int code) {
+		this.code = code;
 	}
 
 }

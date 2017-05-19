@@ -1,7 +1,7 @@
 package org.bala.devtools.models;
 
 public class ActionRequest {
-
+	
 	private String input;
 
 	public String getInput() {
@@ -11,6 +11,5 @@ public class ActionRequest {
 	public void setInput(String sqlquery) {
 		this.input = sqlquery;
 	}
-	
-	
+
 }

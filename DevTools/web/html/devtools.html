@@ -27,19 +27,26 @@
 	    </div>
 	    <div class="collapse navbar-collapse" id="myNavbar">
 	      <ul class="nav navbar-nav">
-	        <li class="active">
-	        <a @click="setCurrentLink('About')" href="#">About</a></li>	      
-	        <li><a @click="setCurrentLink('Base64')" href="#" >Base64 Encode/Decode</a></li>
-	        <li><a @click="setCurrentLink('UrlEncode')" href="#">URL Encode/Decode</a></li>
-	        <li><a @click="setCurrentLink('ESQuery')" href="#">Convert SQL queries to ElasticSearch queries.</a></li>	        
-	      </ul>
-	    
+	        <li v-bind:class="{active : isCurrentLink('About')}">
+	        	<a @click="setCurrentLink('About')" href="#">About</a>
+	        </li>	      
+	        <li v-bind:class="{active : isCurrentLink('Base64')}">
+	        	<a @click="setCurrentLink('Base64')" href="#" >Base64 Encode/Decode</a>
+	        </li>
+	        <li v-bind:class="{active : isCurrentLink('UrlEncode')}">
+	        	<a @click="setCurrentLink('UrlEncode')" href="#">URL Encode/Decode</a>
+	        </li>
+	        <li v-bind:class="{active : isCurrentLink('ESQuery')}">
+	        	<a @click="setCurrentLink('ESQuery')" href="#">Convert SQL queries to ElasticSearch queries.</a>
+	        </li>	        
+	      </ul>    
 	    </div>
 	  </div>
 	</nav>
 	
 <!-- Bootstrap requires a containing element to wrap elements http://www.w3schools.com/bootstrap/bootstrap_get_started.asp -->
  
+	<form accept-charset="UTF-8">
 	<div class="container-fluid">
 		<div v-if="currentLink == 'About'" id="about"> 
 			<!--A jumbotron indicates a big box for calling extra attention to some special content or information. http://www.w3schools.com/bootstrap/bootstrap_jumbotron_header.asp-->
@@ -83,16 +90,23 @@
 					</div>
 					<div class="row">
 						<div class="col-md-8 col-sm-12">
-							<textarea id="base64_data" v-model="data" class="form-control" rows="5"></textarea>
+							<textarea id="base64_data" v-model="data" class="form-control" rows="5" v-on:input="clearResponse"></textarea>
 						</div>
 					</div>
+					
+        			<div class="row">             
+            			<div class="checkbox col-sm-offset-0 col-sm-2 col-xs-offset-0 col-xs-4">
+            				<label><input id="isUrlSafe" type="checkbox">URL Safe</label>
+            			 </div>
+        			</div>			
+        					
 					</br>
 			        <div class="row">
             			<div class="col-sm-1 col-xs-2" >
-                 			<button id="base64_encode" class="btn btn-primary" type="button">Encode</button>
+                 			<button id="base64_encode"  @click="encodeBase64" class="btn btn-primary" type="button">Encode</button>
             			</div>
             			<div class="col-sm-1 col-sm-offset-0  col-xs-offset-1 col-xs-2" >
-             				<button id="base64_decode" class="btn btn-primary" type="button">Decode</button>
+             				<button id="base64_decode" @click="decodeBase64"  class="btn btn-primary" type="button">Decode</button>
             			</div>
         			</div> 
 					
@@ -110,16 +124,16 @@
 					</div>
 					<div class="row">
 						<div class="col-md-8 col-sm-12">
-							<textarea id="urlencode_data" v-model="data" class="form-control" rows="5"></textarea>
+							<textarea id="urlencode_data" v-model="data" class="form-control" rows="5" v-on:input="clearResponse"></textarea>
 						</div>
 					</div>
 					</br>
 			        <div class="row">
             			<div class="col-sm-1 col-xs-2" >
-                 			<button id="urlencode_encode" class="btn btn-primary" type="button">Encode</button>
+                 			<button id="urlencode_encode" @click="encodeUrl" class="btn btn-primary" type="button">Encode</button>
             			</div>
             			<div class="col-sm-1 col-sm-offset-0  col-xs-offset-1 col-xs-2" >
-             				<button id="urlencode_decode" class="btn btn-primary" type="button">Decode</button>
+             				<button id="urlencode_decode" @click="decodeUrl" class="btn btn-primary" type="button">Decode</button>
             			</div>
         			</div> 
 					
@@ -137,7 +151,7 @@
 					</div>
 					<div class="row">
 						<div class="col-md-8 col-sm-12">
-							<textarea id="esquery_data" v-model="data" class="form-control" rows="5"></textarea>
+							<textarea id="esquery_data" v-model="data" class="form-control" rows="5" v-on:input="clearResponse"></textarea>
 						</div>
 					</div>
 					</br>
@@ -150,15 +164,26 @@
 				</div>
 			</div>
 			</br>
-			<div class="row">
-				<div class="col-md-4 alert-success">
-					{{response}}
-				</div>
-			</div>
+
 		</div>
 		
+		</br>
+		</br>
+		
+		<div class="row">
+				<div  id="response" v-html="getResponse()" class="col-md-8 col-sm-12" v-show="response.length > 0" v-bind:class="getMessageClass()" style="word-wrap: break-word">
+					
+				</div>
+		</div>
 	</div>
+	</form>
 </div>	
+<!-- 
+<h1>Result</h1>
+</br>
+<div v-html="response"></div>
+-->					
+
 <!-- Hashing, Unicode lookup, Epoch convert.-->
 <script src="https://unpkg.com/vue@2.0.3/dist/vue.js"></script>
 <script src="../scripts/DevTools.js"></script>
@@ -170,21 +195,76 @@
 		data: {
 			currentLink: 'About',
 			data: '',
-			response: ''
+			response: '',
+			isUrlSafe: false,
+			responseAlert: ''
 		},
 		methods: {
 			setCurrentLink: function(currentLink){
 				this.currentLink = currentLink;
+				this.data = '';
+				this.response = '';
+			},
+			isCurrentLink: function(currentLink){
+				return this.currentLink === currentLink;
 			},
 			getESQuery: function(){
 				
 				console.log('Getting ES Query');
 				var promise = devTools.getESQuery(this.data);
-				promise.then(this.setResponse);
+				promise.then(this.consumeESQueryResponse, this.consumeErrorResponse);
 			},
-			setResponse: function(response) {
-				console.log(response);
-				this.response = response.response;
+			consumeESQueryResponse: function(value){
+				document.getElementById("esquery_data").focus();
+				this.response = value.response;
+				this.responseAlert = 'Success';
+			},
+			encodeBase64: function(){
+				var promise = devTools.encodeBase64(this.isUrlSafe, this.data);
+				promise.then(this.consumeBase64Response, this.consumeErrorResponse);
+			},
+			decodeBase64: function(){
+				var promise = devTools.decodeBase64(this.isUrlSafe, this.data);
+				promise.then(this.consumeBase64Response, this.consumeErrorResponse);			   					
+			},
+			consumeBase64Response: function(value) {
+				document.getElementById("base64_data").focus();
+				this.response = value.response;
+				this.responseAlert = 'Success';
+			},
+			encodeUrl: function(){
+				var promise = devTools.encodeUrl(this.data);
+				promise.then(this.consumeUrlResponse, this.consumeErrorResponse);
+			},
+			decodeUrl: function(){
+				var promise = devTools.decodeUrl(this.data);
+				promise.then(this.consumeUrlResponse, this.consumeErrorResponse);			   					
+			},	
+			consumeUrlResponse: function(value) {
+				document.getElementById("urlencode_data").focus();
+				this.response = value.response;
+				this.responseAlert = 'Success';
+			},					
+			consumeErrorResponse: function(error) {
+				console.log('Error:' + error.response);
+				this.responseAlert = 'Error';
+				this.response = error.response.replace(/(?:\r\n|\r|\n)/g, '<br/>');
+			},
+			getMessageClass: function() {
+				console.log("getMessageClass Called");
+		        if (this.responseAlert == 'Error') {
+                    return ['alert', 'alert-danger'];
+                } else if (this.responseAlert == 'Success') {
+                    return ['alert', 'alert-success'];
+                } else {
+                    return ['alert', 'alert-info'];
+                }
+			},
+			clearResponse: function() {
+				this.response = '';
+			},
+			getResponse: function() {
+				return '<h1>Result</h1>' + '</br>' + this.response;
 			}
 		}
 	});

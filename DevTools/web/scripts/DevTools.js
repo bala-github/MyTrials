@@ -48,6 +48,7 @@ var DevTools = (function () {
 	}
 	
 	DevTools.prototype.getESQuery = function(sql) {
+
 		var data = {'input' : sql};
 			
 		var promise = new Promise(function(resolve, reject) {
@@ -58,7 +59,7 @@ var DevTools = (function () {
 	 			contentType : 'application/json',
 	 			data : JSON.stringify(data),
 	 			success : function(data, status, xhr) { resolve(data); },
-	 			error : function(data, errorStatus, err) { reject('An error occured.'); }
+	 			error : function(xhr, errorStatus, err) { reject(JSON.parse(xhr.responseText)); }
 	 		});		
 			
 		});
@@ -67,5 +68,83 @@ var DevTools = (function () {
 		
 	}
 
+	DevTools.prototype.encodeBase64 = function(isUrlSafe, data) {
+		
+		var data = {'input' : data, 'urlSafe' : isUrlSafe};
+
+		var promise = new Promise(function(resolve, reject) {
+
+			$.ajax({
+	 			type : 'POST',
+	 			url : url + 'action/base64_encode',
+	 			contentType : 'application/json',
+	 			data : JSON.stringify(data),
+	 			success : function(data, status, xhr) { resolve(data); },
+	 			error : function(xhr, errorStatus, err) { reject (JSON.parse(xhr.responseText)); }
+	 		});				
+	
+		});
+		
+		return promise;
+	}
+	
+	DevTools.prototype.decodeBase64 = function(isUrlSafe, data) {
+		
+		var data = {'input' : data, 'urlSafe' : isUrlSafe};
+		
+		var promise = new Promise(function(resolve, reject) {
+		
+			$.ajax({
+	 			type : 'POST',
+	 			url : url + 'action/base64_decode',
+	 			contentType : 'application/json',
+	 			data : JSON.stringify(data),
+	 			success : function(data, status, xhr) { resolve(data); },
+	 			error : function(xhr, errorStatus, err) { reject (JSON.parse(xhr.responseText)); }
+	 		});			
+		});
+		
+		return promise;
+	}	
+	
+	DevTools.prototype.encodeUrl = function(data) {
+		
+		var data = {'input' : data};
+
+		var promise = new Promise(function(resolve, reject) {
+
+			$.ajax({
+	 			type : 'POST',
+	 			url : url + 'action/url_encode',
+	 			contentType : 'application/json',
+	 			data : JSON.stringify(data),
+	 			success : function(data, status, xhr) { resolve(data); },
+	 			error : function(xhr, errorStatus, err) { reject (JSON.parse(xhr.responseText)); }
+	 		});				
+	
+		});
+		
+		return promise;
+	}
+	
+	DevTools.prototype.decodeUrl = function(data) {
+		
+		var data = {'input' : data};
+		
+		var promise = new Promise(function(resolve, reject) {
+		
+			$.ajax({
+	 			type : 'POST',
+	 			url : url + 'action/url_decode',
+	 			contentType : 'application/json',
+	 			data : JSON.stringify(data),
+	 			success : function(data, status, xhr) { resolve(data); },
+	 			error : function(xhr, errorStatus, err) { reject (JSON.parse(xhr.responseText));}
+	 		});			
+		});
+		
+		return promise;
+	}	
+		
 	return DevTools;
 })();
