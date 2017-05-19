@@ -1,6 +1,7 @@
 package org.bala.devtools;
 
 import org.bala.devtools.resources.ActionResource;
+import org.bala.devtools.resources.DevToolsExceptionMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,7 +10,7 @@ import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
-public class DevToolsApplication extends Application<DevToolsConfiguration> {
+public class DevToolsApplication extends Application<DevToolsConfiguration>  {
 
 	private static final Logger logger = LoggerFactory.getLogger(DevToolsApplication.class);
 
@@ -35,10 +36,10 @@ public class DevToolsApplication extends Application<DevToolsConfiguration> {
 		final ActionResource resource = new ActionResource();
 		
 		environment.jersey().register(resource);
+		environment.jersey().register(new DevToolsExceptionMapper());
 	}
 	
 	
 	
 
-	
 }
