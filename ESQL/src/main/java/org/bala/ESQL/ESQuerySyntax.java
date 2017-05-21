@@ -45,6 +45,7 @@ public class ESQuerySyntax {
         aggTokens = new ArrayList<Token>();
 		query = new StringBuilder();
 		queryType = null;
+	
 	}
 	
 	
@@ -53,22 +54,18 @@ public class ESQuerySyntax {
 	    init();
 	    
 		Edge selectEdge = new Edge(TokenType.SELECT);
-		Edge updateEdge = new Edge(TokenType.UPDATE);
-		Edge deleteEdge = new Edge(TokenType.DELETE);
 		Edge descEdge = new Edge(TokenType.DESC);
 		Edge fieldEdge = new Edge(TokenType.FIELD);		
 		Edge fromEdge = new Edge(TokenType.FROM);		
 		Edge tableNameEdge = new Edge(TokenType.TABLE_NAME);		
 		Edge terminatorEdge = new Edge(TokenType.TERMINATOR);
 		Edge whereEdge = new Edge(TokenType.WHERE);
-		Edge setEdge = new Edge(TokenType.SET);
 		
 		Edge conditionOperatorEdge = new Edge(TokenType.CONDITONAL_OPEARATOR);
 		Edge valueEdge = new Edge(TokenType.VALUE);
 		Edge groupOpenEdge = new Edge(TokenType.GROUP_OPEN);
 		Edge groupCloseEdge = new Edge(TokenType.GROUP_CLOSE);
 		Edge logicalOperatorEdge = new Edge(TokenType.LOGICAL_OPERATOR);
-		Edge assignmentOperatorEdge = new Edge(TokenType.ASSIGNMENT_OPERATOR);
 		
 		Edge orderEdge = new Edge(TokenType.ORDER);
 		Edge byEdge = new Edge(TokenType.BY);
@@ -77,50 +74,60 @@ public class ESQuerySyntax {
 		
 		Edge sumEdge = new Edge(TokenType.SUM);
 		Edge avgEdge = new Edge(TokenType.AVG);
+		Edge maxEdge = new Edge(TokenType.MAX);
+		Edge minEdge = new Edge(TokenType.MIN);
+		Edge countEdge = new Edge(TokenType.COUNT);
 		
 		selectEdge.addNeighbour(fieldEdge);
 		selectEdge.addNeighbour(sumEdge);
 		selectEdge.addNeighbour(avgEdge);
+		selectEdge.addNeighbour(maxEdge);
+		selectEdge.addNeighbour(minEdge);
+		selectEdge.addNeighbour(countEdge);
 		
-		updateEdge.addNeighbour(tableNameEdge);
 		descEdge.addNeighbour(tableNameEdge);
 		
 		
-		fieldEdge.addNeighbour(fromEdge,  new ListOfFilter(Arrays.asList(new Filter[] {new NotContainsFilter(TokenType.WHERE), new ContainsFilter(TokenType.SELECT)})));
+		fieldEdge.addNeighbour(fromEdge,  new ListOfFilter(Arrays.asList(new Filter[] {new NotContainsFilter(TokenType.WHERE), 
+				new ContainsFilter(TokenType.SELECT), new DoesNotHaveAtFilter(TokenType.GROUP_OPEN, -1)})));
 		fieldEdge.addNeighbour(fieldEdge, new OneOfFilter(Arrays.asList(new Filter[] { 
 				 new ListOfFilter(Arrays.asList(new Filter[] {new NotContainsFilter(TokenType.WHERE), new ContainsFilter(TokenType.SELECT)})),
 				 new ContainsFilter(TokenType.GROUP)
 		})));
-		fieldEdge.addNeighbour(sumEdge, new NotContainsFilter(TokenType.WHERE));
-		fieldEdge.addNeighbour(avgEdge, new NotContainsFilter(TokenType.WHERE));
+		
+		
+		fieldEdge.addNeighbour(sumEdge, new ListOfFilter(Arrays.asList(new Filter[] {new NotContainsFilter(TokenType.WHERE), new DoesNotHaveAtFilter(TokenType.GROUP_OPEN, -1)})));
+		fieldEdge.addNeighbour(avgEdge, new ListOfFilter(Arrays.asList(new Filter[] {new NotContainsFilter(TokenType.WHERE), new DoesNotHaveAtFilter(TokenType.GROUP_OPEN, -1)})));
+		fieldEdge.addNeighbour(maxEdge, new ListOfFilter(Arrays.asList(new Filter[] {new NotContainsFilter(TokenType.WHERE), new DoesNotHaveAtFilter(TokenType.GROUP_OPEN, -1)})));
+		fieldEdge.addNeighbour(minEdge, new ListOfFilter(Arrays.asList(new Filter[] {new NotContainsFilter(TokenType.WHERE), new DoesNotHaveAtFilter(TokenType.GROUP_OPEN, -1)})));
+		fieldEdge.addNeighbour(countEdge, new ListOfFilter(Arrays.asList(new Filter[] {new NotContainsFilter(TokenType.WHERE), new DoesNotHaveAtFilter(TokenType.GROUP_OPEN, -1)})));
 		
 		sumEdge.addNeighbour(groupOpenEdge);
-		
-
 		avgEdge.addNeighbour(groupOpenEdge);
-		
+		maxEdge.addNeighbour(groupOpenEdge);
+		minEdge.addNeighbour(groupOpenEdge);
+		countEdge.addNeighbour(groupOpenEdge);
 
 		
 		
-		deleteEdge.addNeighbour(fromEdge);  //delete query
 		fromEdge.addNeighbour(tableNameEdge);
 
 		//in select queryies we definitely need a condition.
 		//queries like select * from tablename or not allowed.
 
-		tableNameEdge.addNeighbour(whereEdge, new OneOfFilter(Arrays.asList(new Filter[] {new ContainsFilter(TokenType.SELECT), new ContainsFilter(TokenType.DELETE)})));
-		tableNameEdge.addNeighbour(setEdge, new ContainsFilter(TokenType.UPDATE));
+		tableNameEdge.addNeighbour(whereEdge, new OneOfFilter(Arrays.asList(new Filter[] {new ContainsFilter(TokenType.SELECT)})));
+		
 
 		//desc
-		tableNameEdge.addNeighbour(terminatorEdge, new NotContainsFilter(TokenType.UPDATE));
+		tableNameEdge.addNeighbour(terminatorEdge, new NotContainsFilter(TokenType.WHERE));
 	
 		//update
-		fieldEdge.addNeighbour(assignmentOperatorEdge, new ListOfFilter(Arrays.asList(new Filter[] {new NotContainsFilter(TokenType.WHERE), new ContainsFilter(TokenType.UPDATE)})));
-		setEdge.addNeighbour(fieldEdge, new ContainsFilter(TokenType.UPDATE));		
-		assignmentOperatorEdge.addNeighbour(valueEdge, new ContainsFilter(TokenType.UPDATE));
-		valueEdge.addNeighbour(fieldEdge, new ContainsFilter(TokenType.UPDATE));
+		//fieldEdge.addNeighbour(assignmentOperatorEdge, new ListOfFilter(Arrays.asList(new Filter[] {new NotContainsFilter(TokenType.WHERE), new ContainsFilter(TokenType.UPDATE)})));
+		//setEdge.addNeighbour(fieldEdge, new ContainsFilter(TokenType.UPDATE));		
+		//assignmentOperatorEdge.addNeighbour(valueEdge, new ContainsFilter(TokenType.UPDATE));
+		//valueEdge.addNeighbour(fieldEdge, new ContainsFilter(TokenType.UPDATE));
 		List<Filter> filters = new ArrayList<Filter>();
-		filters.add(new ContainsFilter(TokenType.UPDATE));
+		//filters.add(new ContainsFilter(TokenType.UPDATE));
 		filters.add(new NotContainsFilter(TokenType.WHERE));
 		valueEdge.addNeighbour(whereEdge, new ListOfFilter(filters));
 		
@@ -128,15 +135,19 @@ public class ESQuerySyntax {
 		
 		whereEdge.addNeighbour(groupOpenEdge);
 		groupOpenEdge.addNeighbour(fieldEdge, new OneOfFilter(Arrays.asList(new Filter[] { new ContainsFilter(TokenType.SUM), 
-				new ContainsFilter(TokenType.AVG), new ContainsFilter(TokenType.WHERE)})));
+				new ContainsFilter(TokenType.AVG), new ContainsFilter(TokenType.MAX), new ContainsFilter(TokenType.MIN), 
+				new ContainsFilter(TokenType.COUNT), new ContainsFilter(TokenType.WHERE)})));
 		
-		
-		fieldEdge.addNeighbour(groupCloseEdge, new OneOfFilter(Arrays.asList(new Filter[] { new ContainsFilter(TokenType.SUM), 
-				new ContainsFilter(TokenType.AVG)})));
+		//ToDo: Below condition allows Select Max(did), did) from employee;
+		fieldEdge.addNeighbour(groupCloseEdge, new OneOfFilter(Arrays.asList(new Filter[] { new HasAtFilter(TokenType.SUM, -2), 
+				new HasAtFilter(TokenType.AVG,-2), new HasAtFilter(TokenType.MAX,-2), new HasAtFilter(TokenType.MIN,-2), new HasAtFilter(TokenType.COUNT,-2)})));
 		
 		groupCloseEdge.addNeighbour(fieldEdge, new NotContainsFilter(TokenType.WHERE));
 		groupCloseEdge.addNeighbour(sumEdge, new NotContainsFilter(TokenType.WHERE));
 		groupCloseEdge.addNeighbour(avgEdge, new NotContainsFilter(TokenType.WHERE));
+		groupCloseEdge.addNeighbour(maxEdge, new NotContainsFilter(TokenType.WHERE));
+		groupCloseEdge.addNeighbour(minEdge, new NotContainsFilter(TokenType.WHERE));
+		groupCloseEdge.addNeighbour(countEdge, new NotContainsFilter(TokenType.WHERE));
 		groupCloseEdge.addNeighbour(fromEdge, new NotContainsFilter(TokenType.WHERE));
 		
 		//we don't allow two continue open brackets.
@@ -192,9 +203,9 @@ public class ESQuerySyntax {
 		
 		startingEdge = new Edge(TokenType.START);
 		startingEdge.addNeighbour(selectEdge);
-		startingEdge.addNeighbour(updateEdge);
-		startingEdge.addNeighbour(descEdge);
-		startingEdge.addNeighbour(deleteEdge);
+		//startingEdge.addNeighbour(updateEdge);
+		//startingEdge.addNeighbour(descEdge);
+		//startingEdge.addNeighbour(deleteEdge);
 	}
 
 	public List<Token> validateQuery(String query) throws TokenValidationException {
@@ -232,8 +243,11 @@ public class ESQuerySyntax {
 		int length = 0;
 		List<Token> seenTokens = new ArrayList<Token>();
 		do {
+			
 			boolean validated = false;
+			
 			StringBuilder errorMsg = new StringBuilder("Error due to one of these.\n");
+			
 			String token  = tokens[counter++];
 			
 			logger.trace("--------------------");	
@@ -241,7 +255,7 @@ public class ESQuerySyntax {
 			
 			for(Edge candidate : candidates.keySet()) {
 				
-				logger.trace("Token Tpe {} ", candidate.getTokenType());
+				logger.trace("Token Type {} ", candidate.getTokenType());
 				
 				try {
 					
@@ -259,22 +273,36 @@ public class ESQuerySyntax {
 				}																
 			}
 			
+			
 			length = length + token.length();
 			
 			if(!validated) {
 				logger.info("Query:{}", query);
 				logger.error("Invalid Token:[{}{}" , token , "]");
-				throw new TokenValidationException(errorMsg.toString());
+			
+				StringBuilder errorHeader = new StringBuilder(query + "\n");
+				/*
+				for(int i = 0; i < (length + counter - 1); i++) {
+					errorHeader.append(" ");
+				}
+		
+				errorHeader.append("^\n");
+				*/
+				errorHeader.append(errorMsg.toString());
+				throw new TokenValidationException(errorHeader.toString());
 			} 
 			
-			if(candidates.size() == 0) {
-				break;
-			} else if(counter >= tokens.length) {
-				//we ran out of tokens
-				throw new TokenValidationException("Unexpected end of input.");
+			if(counter == tokens.length && !token.equalsIgnoreCase(";")) {
+				//we ran out of tokens and last token is not ';'
+				throw new TokenValidationException("Unexpected End Of Input");
+			}	
+			
+			if(token.equalsIgnoreCase(";") && counter < tokens.length) {
+				//something after ';'.
+				throw new TokenValidationException("Unexpected input after ';'");
 			}
 			
-		}while(true);
+		}while(candidates.size() > 0);
 		
 		return seenTokens;
 	}
@@ -292,18 +320,24 @@ public class ESQuerySyntax {
 			index = 1;
 			
 			do {
-			    Token token = tokens.get(index);
+
+				Token token = tokens.get(index);
 				if(token.getType() == TokenType.FIELD) {
 					fields.add(token.getData());
 					index++;
-				}else if(token.getType() == TokenType.SUM || token.getType() == TokenType.AVG){
+				}else if(token.getType() == TokenType.SUM || token.getType() == TokenType.AVG 
+						|| token.getType() == TokenType.MAX || token.getType() == TokenType.MIN
+						|| token.getType() == TokenType.COUNT){
+					
 					aggTokens.add(token);
 					//ignoring '('
 					++index;
 					//get next token.
 					logger.trace("Finding field on which to aggregate");
 					Token aggfield = tokens.get(++index);
-					
+					if(token.getType() != TokenType.COUNT && aggfield.getData().equalsIgnoreCase("*")) {
+						throw new TokenValidationException("'*' not allowed for " + token.getData());
+					}
 					logger.trace("{} - {}", aggfield.getData() , aggfield.getType());
 					
 					if(aggfield.getType() == TokenType.FIELD){
@@ -381,9 +415,20 @@ public class ESQuerySyntax {
 
 		logger.trace(query.toString());
 		if(queryType == TokenType.SELECT) {
-					
-			//NOTE: In filtered query, if no query is specified it would use match_all query by default.
-			query.append("{\"from\": 0, \"size\":" + Integer.MAX_VALUE );
+			
+			query.append("curl -XPOST http://localhost:9200/" + tableName);
+			
+			boolean isCountQuery = false;
+			//We use count api if there are no fields in Select statement and only Count(*) is there.
+			if(fields.isEmpty() && (aggTokens.size() == 2 && aggTokens.get(0).getType() == TokenType.COUNT && aggTokens.get(1).getData().equalsIgnoreCase( "*"))) {
+				query.append("/_count --data-binary '{");
+				aggTokens.clear();
+				isCountQuery = true;
+			} else {
+				query.append("/_search --data-binary '");
+				//NOTE: In filtered query, if no query is specified it would use match_all query by default.
+				query.append("{\"from\": 0, \"size\":" + Integer.MAX_VALUE );				
+			}
             /*
 			while(!logicalTokens.isEmpty() && !filters.isEmpty()) {
 				Token token = logicalTokens.pop();
@@ -397,10 +442,13 @@ public class ESQuerySyntax {
 			
 
 			if(!filters.isEmpty()){
+				if(!isCountQuery) {
+					query.append(",");
+				}
 				if(/*useFilters ||*/ !hasContainsOperator) {
-					query.append(",\"filter\": { " );
+					query.append("\"filter\": { " );
 				} else {
-					query.append(",\"query\": { ");
+					query.append("\"query\": { ");
 				}
 
 				String filter = filters.pop();
@@ -439,13 +487,20 @@ public class ESQuerySyntax {
 			
 			//handle aggregate conditions. They should be placed inside the inner most group by condition
 			if(aggTokens.size() > 0){
-
 				query.append(",\"aggs\": {");
 				for(int i = 0; i < aggTokens.size(); i=i+2){
 					Token aggOperation = aggTokens.get(i);
 					Token aggField = aggTokens.get(i+1);
+					if(aggField.getData() == "*") {
+						/* 
+						 * '*' is allowed only for COUNT aggregation and we don't have 
+						 * to do anything special for COUNT(*)
+						 * */
+						continue;
+					}
 					query.append("\"" + aggOperation.getData() + "_"+ aggField.getData() + "\": {");
-					query.append("\"" + aggOperation.getData() + "\" : { \"field\" :  \"" + aggField.getData() + "\"}");
+					query.append("\"" + (aggOperation.getType() == TokenType.COUNT ? "value_count":aggOperation.getData())
+							+ "\" : { \"field\" :  \"" + aggField.getData() + "\"}");
 					query.append("},");
 				}
 				query.setCharAt(query.length()-1, '}');
@@ -458,7 +513,7 @@ public class ESQuerySyntax {
 
 			
 			if(fields.size() == 1 && fields.get(0).equalsIgnoreCase("*")){
-			}else{
+			} else if (fields.size() > 0){
 
 				query.append(", \"fields\": [");
 				for(int i = 0; i < fields.size() - 1; i++) {
@@ -472,6 +527,7 @@ public class ESQuerySyntax {
 			
        	}
 		
+		query.append("'");
 		logger.trace(query.toString());
 		
 		return query.toString();
@@ -639,14 +695,8 @@ public class ESQuerySyntax {
 				case SELECT:
 					tokenValidator = new DefaultTokenValidator(TokenType.SELECT);
 					break;
-				case UPDATE:
-					tokenValidator = new DefaultTokenValidator(TokenType.UPDATE);
-					break;
 				case DESC:
 					tokenValidator = new DefaultTokenValidator(TokenType.DESC);
-					break;
-				case DELETE:
-					tokenValidator = new DefaultTokenValidator(TokenType.DELETE);
 					break;
 				case TABLE_NAME:
 					tokenValidator = new TableNameTokenValidator(keyWords);
@@ -696,7 +746,17 @@ public class ESQuerySyntax {
 				case AVG:
 					tokenValidator = new DefaultTokenValidator(TokenType.AVG);
 					break;
+				case MAX:
+					tokenValidator = new DefaultTokenValidator(TokenType.MAX);
+					break;
+				case MIN:
+					tokenValidator = new DefaultTokenValidator(TokenType.MIN);
+					break;
+				case COUNT:
+					tokenValidator = new DefaultTokenValidator(TokenType.COUNT);
+					break;					
 			}
+			
 		}
 		
 		private TokenType getTokenType(){
@@ -743,16 +803,20 @@ public class ESQuerySyntax {
 		//String query = "update ngq_email_metadata set quarantine_expire_date = 1455857954 where email_message_id == 'c48b74684b3e5f0c332b70b921d029067a75f0e5ab0b5b8e88f4f70fc29666d0';";
 		
 		//syntax.useFilters = true;
-		//String query = "select first_name from employee where first_name == 'Robert' and (middle_name == 'Edward' or last_name == 'Rogers') "
-		//		+ "order by first_name asc, last_name desc group by department_id,college_id;";
+		String query = "select first_name from employee where first_name == 'Robert' and (middle_name == 'Edward' or last_name == 'Rogers') "
+				+ "order by first_name asc, last_name dsc group by department_id,college_id;";
 		
-		//String query = "select user_id, master_recipient, email_size , sum (email_size) , avg (email_size) from ngq_email_metadata where customer_id != 1 order by user_id asc group by customer_id,domain_id;";
+		//String query = "select user_id, master_recipient, email_size , sum (email_size) , max(email_size), min(email_size), "
+		//		+ " avg (email_size) from ngq_email_metadata where customer_id != 1 order by user_id asc group by customer_id,domain_id;";
 		
 		//String query = "select * from employee where quarantine_expire_date == 'abc' ;";
 		
 		//String query = "select user_id, master_recipient, email_size , sum (email_size) , avg (email_size) from ngq_email_metadata where user_id == 1;";
 		
-		String query = "select email_size from ngq_email_metadata where user_id == 1;";
+		//String query = "select email_size from ngq_email_metadata;";
+		
+		//String query = "select count(email_message_id) from ngq_email_metadata where customer_id == 1 group by domain_id;";
+		//String query = "Select Max(did), Min(did) from employee;";
 		
 		try {
 			
@@ -765,6 +829,7 @@ public class ESQuerySyntax {
 			e.printStackTrace();
 			logger.error("Query: {} \nError: {}" , query, e.getMessage());	
 		}
+		
 	}
 }
 
@@ -772,3 +837,7 @@ public class ESQuerySyntax {
 
 //http://stackoverflow.com/questions/22927098/show-all-elasticsearch-aggregation-results-buckets-and-not-just-10
 
+
+//select user_id,master_recipient,email_size,sum ( email_size ),max ( email_size ),min ( email_size ) avg ( email_size ) from ngq_email_metadata where customer_id != 1 order by user_id asc group by customer_id,domain_id ; 
+
+//select user_id,master_recipient,email_size,sum ( email_size ),max ( email_size ),min ( email_size ),avg ( email_size ) from ngq_email_metadata where customer_id != 1 order by user_id asc group by customer_id,domain_id ; 

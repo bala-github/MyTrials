@@ -6,8 +6,6 @@ public enum TokenType {
 	FIELD,
 	FROM,
 	SELECT,
-	UPDATE,
-	DELETE,
 	DESC,
 	TABLE_NAME,
 	TERMINATOR,
@@ -26,7 +24,10 @@ public enum TokenType {
 	DSC,
 	GROUP,
 	SUM,
-	AVG;
+	AVG,
+	MAX,
+	MIN,
+	COUNT;
 	
 	public String toString(){
 		
@@ -36,7 +37,9 @@ public enum TokenType {
 			return ")";
 		}else if(name().equalsIgnoreCase(TokenType.TERMINATOR.name())){
 			return ";";
-		}else{
+		}else if(name().equalsIgnoreCase(TokenType.ASSIGNMENT_OPERATOR.name())) {
+			return "=";			
+		} else{
 			return name();
 		}
 	}

@@ -27,17 +27,19 @@
 	    </div>
 	    <div class="collapse navbar-collapse" id="myNavbar">
 	      <ul class="nav navbar-nav">
+	      <!--
 	        <li v-bind:class="{active : isCurrentLink('About')}">
 	        	<a @click="setCurrentLink('About')" href="#">About</a>
 	        </li>	      
 	        <li v-bind:class="{active : isCurrentLink('Base64')}">
-	        	<a @click="setCurrentLink('Base64')" href="#" >Base64 Encode/Decode</a>
+	        	<a  @click="setCurrentLink('Base64')" href="#" >Base64 Encode/Decode</a>
 	        </li>
 	        <li v-bind:class="{active : isCurrentLink('UrlEncode')}">
 	        	<a @click="setCurrentLink('UrlEncode')" href="#">URL Encode/Decode</a>
 	        </li>
+	       --> 
 	        <li v-bind:class="{active : isCurrentLink('ESQuery')}">
-	        	<a @click="setCurrentLink('ESQuery')" href="#">Convert SQL queries to ElasticSearch queries.</a>
+	        	<a  @click="setCurrentLink('ESQuery')" href="#">Convert SQL queries to ElasticSearch queries.</a>
 	        </li>	        
 	      </ul>    
 	    </div>
@@ -50,8 +52,10 @@
 	<div class="container-fluid">
 		<div v-if="currentLink == 'About'" id="about"> 
 			<!--A jumbotron indicates a big box for calling extra attention to some special content or information. http://www.w3schools.com/bootstrap/bootstrap_jumbotron_header.asp-->
-			<div class="jumbotron">
-			  <h1>Dev Tools</h1>
+			<div class ="row">
+				<div class="jumbotron">
+			  		<h1>Dev Tools</h1>
+				</div>
 			</div>
 			
 			<div class="row">
@@ -61,26 +65,27 @@
 				http://www.w3schools.com/bootstrap/bootstrap_grid_large.asp
 				-->
 				<div class="col-sm-4 col-md-4">
-					<p><button type="button" @click="setCurrentLink('Base64')" class="btn btn-info">Base64 Encode/Decode</button></p>
+					<p><button type="button " @click="setCurrentLink('Base64')" class="btn btn-primary">Base64 Encode/Decode</button></p>
 					<p>Base64 encode or decode UTF-8 data.
 					</br>
 				</div>
 				
 				<div class="col-sm-4 col-md-4">
-					<p><button type="button" @click="setCurrentLink('UrlEncode')" class="btn btn-info">URL Encode/Decode</button></p>
+					<p><button type="button" @click="setCurrentLink('UrlEncode')" class="btn btn-primary">URL Encode/Decode</button></p>
 					<p>Encode or Decode URL's with UTF-8 characters</p>
 					</br>
 				</div>
 				
 				<div class="col-sm-4 col-md-4">
 					<p>
-					<button type="button" @click="setCurrentLink('ESQuery')" class="btn btn-info">Convert SQL query to ElasticSearch Query</button>
+					<button type="button" @click="setCurrentLink('ESQuery')" class="btn btn-primary">Convert SQL query to ElasticSearch Query</button>
 					<p>Generate MIB File by specifying metrics and alerts.</p>
 					</p>
 				</div>
 			</div>
-		</div>	
-		<div v-if="currentLink == 'Base64'" id="base64">
+		</div>
+	</div>		
+		<div v-if="currentLink == 'Base64'" id="base64" class="container">
 			<div class="row">
 				<div>
 					<div class="row">
@@ -114,7 +119,7 @@
 			</div>
 		</div>
 
-		<div v-if="currentLink == 'UrlEncode'" id="urlencode">
+		<div v-if="currentLink == 'UrlEncode'" id="urlencode" class="container">
 			<div class="row">
 				<div>
 					<div class="row">
@@ -141,7 +146,7 @@
 			</div>
 		</div>
 
-		<div v-if="currentLink == 'ESQuery'" id="esquery">
+		<div v-if="currentLink == 'ESQuery'" id="esquery" class="container">
 			<div class="row">
 				<div>
 					<div class="row">
@@ -169,11 +174,55 @@
 		
 		</br>
 		</br>
-		
-		<div class="row">
+		<div class="container">
+			<div class="row">
 				<div  id="response" v-html="getResponse()" class="col-md-8 col-sm-12" v-show="response.length > 0" v-bind:class="getMessageClass()" style="word-wrap: break-word">
 					
 				</div>
+			</div>
+		</div>
+		
+		<div v-if="currentLink == 'ESQuery'" id="esquery" class="container">
+			<div class="row">
+				<div>
+					<h2>Help</h2>
+					<h3>Supported Operations</h3>
+					<p class="lead"> <em>Select, Max, Min, Avg, Group By, Order By, And, Or, <, <=, !=, ==, >, >=, contains  </em></p>
+					<h3>Limitations</h3>
+					<p class="lead"> <em>Does not support date/time values  </em></p>					
+					<p class="lead"> <em>For equality condition use '==' instead of '='  </em></p>
+					<h3>Examples</h3>
+					<p class="lead">For an index 'student' with the following mapping,</p>
+					<p>"{mappings: {"student_type" : { "properties" : {
+					</br>"id" : { "type" : long},
+					</br>"name" : { "type" : string}
+					</br>"department_id" : { "type" : long},
+					</br>"college_id" : { "type" : long},
+					</br>"age" : { "type" : long},
+					</br>"hostler" : { "type" : boolean}   
+					</br>}}}}"</p>
+					
+					<h4><blockquote><em>Find id and name of students studying at college '1'</em></blockquote></h4>
+					<p> select id, name from student where college_id == 1;</p>
+					
+					<h4><blockquote><em>Find id and name of students studying at college '1' or college '2'</em></blockquote></h4>
+					<p> select id, name from student where college_id == 1 or college_id == 2;</p>
+
+					<h4><blockquote><em>Find id and name of students studying at college '1' and either in department '1' or department '2'</em> </blockquote></h4>
+					<p>select id, name from student where college_id == 1 and (department_id == 1 or department_id ==2);</p>
+
+					<h4><blockquote><em>Find id and name of students in hostel studying at college '1' and either in department '1' or department '2'</em> </blockquote></h4>
+					<p>select id, name from student where college_id == 1 and hostler == true and (department_id == 1 or department_id ==2);</p>
+
+					<h4><blockquote>Find total no. of students studying at college '1' </blockquote></h4>
+					<p>select count(*) from student where college_id == 1;</p>
+					
+					<h4><blockquote>Find Min,Max and Avg age of students in each department of every college</blockquote></h4>
+					<p>select Min(age),Max(age),Avg(age) from student group by college_id,department_id;</p>
+					
+					
+				</div>
+			</div>
 		</div>
 	</div>
 	</form>
@@ -193,7 +242,7 @@
 	
 		el: '#app',
 		data: {
-			currentLink: 'About',
+			currentLink: 'ESQuery',
 			data: '',
 			response: '',
 			isUrlSafe: false,
@@ -247,8 +296,10 @@
 			},					
 			consumeErrorResponse: function(error) {
 				console.log('Error:' + error.response);
+				var id = this.currentLink.toLowerCase() + '_data';
+				document.getElementById(id).focus();
 				this.responseAlert = 'Error';
-				this.response = error.response.replace(/(?:\r\n|\r|\n)/g, '<br/>');
+				this.response = error.response.replace(/(?:\r\n|\r|\n)/g, '<br/>').replace(/ /g, '&nbsp;');
 			},
 			getMessageClass: function() {
 				console.log("getMessageClass Called");
