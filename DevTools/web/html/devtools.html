@@ -151,7 +151,7 @@
 				<div>
 					<div class="row">
 						<div class="col-xs-12">
-               				<label style="white-space:normal !important;">Enter the SQL query</label></td>
+               				<label style="white-space:normal !important;">Enter you query in SQL format</label></td>
 						</div>
 					</div>
 					<div class="row">
@@ -162,7 +162,7 @@
 					</br>
 			        <div class="row">
             			<div class="col-sm-1 col-xs-2" >
-                 			<button id="esquery_convert"  @click="getESQuery" class="btn btn-primary" type="button">Convert</button>
+                 			<button id="esquery_convert"  @click="getESQuery" class="btn btn-primary" type="button">Convert To ElasticSearch Query</button>
             			</div>
         			</div> 
 					
@@ -186,41 +186,49 @@
 			<div class="row">
 				<div>
 					<h2>Help</h2>
+					
 					<h3>Supported Operations</h3>
-					<p class="lead"> <em>Select, Max, Min, Avg, Group By, Order By, And, Or, <, <=, !=, ==, >, >=, contains  </em></p>
+					<p class="lead"> <em>Select, Max, Min, Avg, Group By, Order By, Count, And, Or, <, <=, !=, ==, >, >=, 
+					contains(maps to 'match' query in ElasticSearch for doing full text search)  </em></p>
+					
 					<h3>Limitations</h3>
-					<p class="lead"> <em>Does not support date/time values  </em></p>					
-					<p class="lead"> <em>For equality condition use '==' instead of '='  </em></p>
+					<p class="lead"> 
+					  <em>Does not support date/time values  </em> 
+					  </br> 					
+					  <em>For equality condition use '==' instead of '='  </em>
+					</p>
+					
+										
 					<h3>Examples</h3>
 					<p class="lead">For an index 'student' with the following mapping,</p>
 					<p>"{mappings: {"student_type" : { "properties" : {
 					</br>"id" : { "type" : long},
-					</br>"name" : { "type" : string}
+					</br>"full_name" : { "type" : string}
 					</br>"department_id" : { "type" : long},
 					</br>"college_id" : { "type" : long},
 					</br>"age" : { "type" : long},
+					</br>"hobbies" : { "type" : string},
 					</br>"hostler" : { "type" : boolean}   
 					</br>}}}}"</p>
 					
 					<h4><blockquote><em>Find id and name of students studying at college '1'</em></blockquote></h4>
-					<p> select id, name from student where college_id == 1;</p>
+					<p> select id, full_name from student where college_id == 1;</p>
 					
-					<h4><blockquote><em>Find id and name of students studying at college '1' or college '2'</em></blockquote></h4>
-					<p> select id, name from student where college_id == 1 or college_id == 2;</p>
-
-					<h4><blockquote><em>Find id and name of students studying at college '1' and either in department '1' or department '2'</em> </blockquote></h4>
-					<p>select id, name from student where college_id == 1 and (department_id == 1 or department_id ==2);</p>
+					<h4><blockquote><em>Find id and name of students studying at college '1' and containing 'tom' in full_name </em></blockquote></h4>
+					<p> select id, full_name from student where college_id == 1 and full_name contains 'tom';</p>
+										
+					<h4><blockquote><em>Find id and name of students studying at college '1' or college '2' ordered by id in ascending order and name in descending order
+					</em></blockquote></h4>
+					<p> select id, full_name from student where college_id == 1 or college_id == 2 order by id asc, full_name dsc;</p>
 
 					<h4><blockquote><em>Find id and name of students in hostel studying at college '1' and either in department '1' or department '2'</em> </blockquote></h4>
-					<p>select id, name from student where college_id == 1 and hostler == true and (department_id == 1 or department_id ==2);</p>
+					<p>select id, full_name from student where college_id == 1 and hostler == true and (department_id == 1 or department_id ==2);</p>
 
 					<h4><blockquote>Find total no. of students studying at college '1' </blockquote></h4>
 					<p>select count(*) from student where college_id == 1;</p>
 					
 					<h4><blockquote>Find Min,Max and Avg age of students in each department of every college</blockquote></h4>
-					<p>select Min(age),Max(age),Avg(age) from student group by college_id,department_id;</p>
-					
-					
+					<p>select Min(age),Max(age),Avg(age) from student group by college_id,department_id;</p>	
 				</div>
 			</div>
 		</div>

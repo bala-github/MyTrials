@@ -355,7 +355,7 @@ public class ESQuerySyntax {
 			tableName = tokens.get(index + 1).getData();
 			
 		
-			index = index + 2;
+			index = index + 1;
 			
 			
 		} 
@@ -366,7 +366,10 @@ public class ESQuerySyntax {
 		
 		for(int i = index + 1; i < tokens.size() - 1; i++) {
 			Token token = tokens.get(i);
-			if(token.getType() == TokenType.GROUP_CLOSE) {
+			
+			if(token.getType() == TokenType.WHERE) {
+				continue; //do nothing for WHERE token;
+			} else if(token.getType() == TokenType.GROUP_CLOSE) {
 			  	compressGroup();
 			} else if(token.getType() == TokenType.GROUP_OPEN) {
 			    logicalTokens.push(token);	
@@ -473,6 +476,7 @@ public class ESQuerySyntax {
 				
 			}
 			
+			logger.info("Group Tokens Size:" + groupTokens.size());
 			//handle group by conditions
 			if(groupTokens.size() > 0 ){
 				
@@ -803,8 +807,8 @@ public class ESQuerySyntax {
 		//String query = "update ngq_email_metadata set quarantine_expire_date = 1455857954 where email_message_id == 'c48b74684b3e5f0c332b70b921d029067a75f0e5ab0b5b8e88f4f70fc29666d0';";
 		
 		//syntax.useFilters = true;
-		String query = "select first_name from employee where first_name == 'Robert' and (middle_name == 'Edward' or last_name == 'Rogers') "
-				+ "order by first_name asc, last_name dsc group by department_id,college_id;";
+		//String query = "select first_name from employee where first_name == 'Robert' and (middle_name == 'Edward' or last_name == 'Rogers') "
+		//		+ "order by first_name asc, last_name dsc group by department_id,college_id;";
 		
 		//String query = "select user_id, master_recipient, email_size , sum (email_size) , max(email_size), min(email_size), "
 		//		+ " avg (email_size) from ngq_email_metadata where customer_id != 1 order by user_id asc group by customer_id,domain_id;";
@@ -817,6 +821,8 @@ public class ESQuerySyntax {
 		
 		//String query = "select count(email_message_id) from ngq_email_metadata where customer_id == 1 group by domain_id;";
 		//String query = "Select Max(did), Min(did) from employee;";
+		
+		String query = "select Min(age),Max(age),Avg(age) from student where age > 10  group by college_id,department_id;";
 		
 		try {
 			
